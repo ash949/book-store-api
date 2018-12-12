@@ -1,0 +1,22 @@
+{
+  "name": "book-store-api",
+  "version": "1.0.0",
+  "description": "Book Store API",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Book",
+    "Store",
+    "API"
+  ],
+  "author": "Hamza Ashour",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "pg": "^7.7.1",
+    "pg-hstore": "^2.3.2",
+    "sequelize": "^4.41.2"
+  }
+}
