@@ -5,23 +5,23 @@ const secret = require('../../config/auth').secret;
 let User = require('../models').User;
 
 let options = {
-	jwtFromRequest: JwtExtractor.fromAuthHeaderAsBearerToken(),
-	secretOrKey: secret
+  jwtFromRequest: JwtExtractor.fromAuthHeaderAsBearerToken(),
+  secretOrKey: secret
 };
 
 passport.use(new JwtStrategy(options, (payload, done) => {
-	User.findById(payload.id).then((user, err) => {
-		if (err) {
-			return done(err, false);
-		}
-		if (user) {
-			user = user.get({ plain: true });
-			delete user.password;
-			return done(null, user);
-		} else {
-			return done(null, false);
-		}
-	});
+  User.findById(payload.id).then((user, err) => {
+    if (err) {
+      return done(err, false);
+    }
+    if (user) {
+      user = user.get({ plain: true });
+      delete user.password;
+      return done(null, user);
+    } else {
+      return done(null, false);
+    }
+  });
 }));
 
 module.exports = passport;
