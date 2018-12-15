@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     isRemembered: DataTypes.BOOLEAN,
     isVerified: DataTypes.BOOLEAN
   }, {});
-  User.associate = function(models) {
+  User.associate = function (models) {
     User.hasMany(models.Rating)
   };
   return User;

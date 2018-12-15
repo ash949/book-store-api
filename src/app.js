@@ -14,37 +14,34 @@ app.use(passport.initialize());
 app.use('/auth', authRouter);
 
 app.get('/', (req, res) => {
-	res.send('hello');
+  res.send('hello');
 });
 
 app.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
-	res.send(req.user);
+  res.send(req.user);
 });
 
 app.post('/', (req, res) => {
-	res.send(req.body);
+  res.send(req.body);
 });
 
 
 models.sequelize.sync().then(function () {
-	app.listen(port, () => {
-		// Creating a sample user;
+  app.listen(port, () => {
+    // Creating a sample user;
 
-		// bcrypt.hash('123456', 2, (err, hash)=>{
-		//     if(err){
-		//         console.log('==================================================================');
-		//         console.log('ERROR: Something went wrong while registeration...please try again');
-		//         console.log('==================================================================');
-		//     }else{
-		//         models.User.create({
-		//             username: 'hamza1',
-		//             email: 'hamza@hamza.com',
-		//             password: hash
-		//         });
-		//     }
-		// });
-	});
+    // bcrypt.hash('123456', 2, (err, hash)=>{
+    //     if(err){
+    //         console.log('==================================================================');
+    //         console.log('ERROR: Something went wrong while registeration...please try again');
+    //         console.log('==================================================================');
+    //     }else{
+    //         models.User.create({
+    //             username: 'hamza1',
+    //             email: 'hamza@hamza.com',
+    //             password: hash
+    //         });
+    //     }
+    // });
+  });
 });
-
-
-
