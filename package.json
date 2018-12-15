@@ -14,9 +14,22 @@
   "author": "Hamza Ashour",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^3.0.2",
     "express": "^4.16.4",
+    "jsonwebtoken": "^8.4.0",
+    "passport": "^0.4.0",
+    "passport-jwt": "^4.0.0",
     "pg": "^7.7.1",
     "pg-hstore": "^2.3.2",
     "sequelize": "^4.41.2"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ash949/book-store-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ash949/book-store-api/issues"
+  },
+  "homepage": "https://github.com/ash949/book-store-api#readme"
 }
