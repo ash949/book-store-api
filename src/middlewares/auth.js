@@ -10,7 +10,7 @@ let options = {
 };
 
 passport.use(new JwtStrategy(options, (payload, done) => {
-  User.findById(payload.id).then((user, err) => {
+  User.findByPk(payload.id).then((user, err) => {
     if (err) {
       return done(err, false);
     }
