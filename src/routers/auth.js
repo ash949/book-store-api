@@ -5,7 +5,7 @@ let bcrypt = require('bcrypt');
 let authSecrets = require('../../config/auth');
 let router = express.Router();
 
-router.post('/login', (req, res) => {
+const loginUser = (req, res) => {
   User.findOne({ where: { email: req.body.email } }).then((user) => {
     if (user) {
       bcrypt.compare(req.body.password, user.password).then((isMatched) => {
@@ -23,8 +23,12 @@ router.post('/login', (req, res) => {
     } else {
       res.send('Email is not registered');
     }
-
   });
-});
+};
 
-module.exports = router;
+router.post('/login', loginUser);
+
+module.exports = {
+  router: router,
+  loginUser: loginUser
+};

@@ -1,8 +1,8 @@
 let express = require('express');
 let models = require('./models');
 let passport = require('./middlewares/auth');
-let authRouter = require('./routers/auth');
-let usersRouter = require('./routers/users');
+let authRouter = require('./routers/auth').router;
+let usersRouter = require('./routers/users').router;
 
 const port = process.env.PORT || 3000;
 

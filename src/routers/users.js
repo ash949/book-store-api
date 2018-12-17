@@ -3,7 +3,7 @@ let router = express.Router();
 let bcrypt = require('bcrypt');
 let User = require('../models').User;
 
-router.get('/', (req, res)=>{
+const getUsers = (req, res) => {
   User.findAll().then((users)=>{
     if(users.length === 0){
       res.statusCode = 404;
@@ -15,9 +15,9 @@ router.get('/', (req, res)=>{
     res.statusCode = 400;
     res.send(`sequelize-select-findAll Exception Error: ${err.message}`);
   });
-});
+};
 
-router.get('/:id', (req, res)=>{
+const getUser = (req, res) => {
   User.findByPk(req.params.id).then((user)=>{
     if(user){
       res.statusCode = 200;
@@ -30,9 +30,9 @@ router.get('/:id', (req, res)=>{
     res.statusCode = 400;
     res.send(`sequelize-select-findByPk Exception Error: ${err.message}`);
   });
-});
+};
 
-router.post('/', (req, res)=>{
+const createUser = (req, res) => {
   User.create(req.body).then((user)=>{
     res.statusCode = 201;
     res.json(user.get({ plain: true }));
@@ -40,9 +40,9 @@ router.post('/', (req, res)=>{
     res.statusCode = 400;
     res.send(`sequelize-create Exception Error: ${err.message}`);
   });
-});
+};
 
-router.patch('/:id', (req, res)=>{
+const updateUser = (req, res) => {
   User.findByPk(req.params.id).then((user)=>{
     if(user){
       user.update(req.body).then(()=>{
@@ -60,9 +60,9 @@ router.patch('/:id', (req, res)=>{
     res.statusCode = 400;
     res.send(`sequelize-update-findByPk Exception Error: ${err.message}`);
   });
-});
+};
 
-router.delete('/:id', (req, res)=>{
+const deleteUser = (req, res) => {
   User.findByPk(req.params.id).then( (user)=>{
     if(user){
       userToReturn = user.get({ plain: true });
@@ -77,6 +77,20 @@ router.delete('/:id', (req, res)=>{
     res.statusCode = 400;
     res.send(`sequelize-delete Exception Error: ${err.message}`);
   });
-});
+};
 
-module.exports = router;
+router.get('/', getUsers);
+router.get('/:id', getUser);
+router.post('/', createUser);
+router.patch('/:id', updateUser);
+router.delete('/:id', deleteUser);
+
+
+module.exports = {
+  router: router,
+  getUsers: getUsers,
+  getUser: getUser,
+  createUser: createUser,
+  updateUser: updateUser,
+  deleteUser: deleteUser
+};
