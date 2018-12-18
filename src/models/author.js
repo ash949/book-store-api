@@ -6,8 +6,12 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'authors'
   });
   Author.associate = function(models) {
-    Author.belongsTo(models.User);
-    Author.hasMany(models.Book);
+    Author.belongsTo(models.User, {
+      foreignKey: 'userId'
+    });
+    Author.hasMany(models.Book, {
+      foreignKey: 'authorId'
+    });
   };
   return Author;
 };

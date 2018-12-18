@@ -4,8 +4,12 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'downloads'
   });
   Download.associate = (models) => {
-    Download.belongsTo(models.User);
-    Download.belongsTo(models.Book);
+    Download.belongsTo(models.User, {
+      foreignKey: 'userId'
+    });
+    Download.belongsTo(models.Book, {
+      foreignKey: 'bookId'
+    });
   };
   return Download;
 };

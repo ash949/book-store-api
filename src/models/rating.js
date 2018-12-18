@@ -7,8 +7,12 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'ratings'
   });
   Rating.associate = function (models) {
-    Rating.belongsTo(models.User);
-    Rating.belongsTo(models.Book);
+    Rating.belongsTo(models.User, {
+      foreignKey: 'userId'
+    });
+    Rating.belongsTo(models.Book, {
+      foreignKey: 'bookId'
+    });
   };
   return Rating;
 };

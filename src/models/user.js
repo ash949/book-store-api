@@ -36,10 +36,18 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
   User.associate = (models) => {
-    User.hasMany(models.Rating);
-    User.hasMany(models.Download);
-    User.hasOne(models.Admin);
-    User.hasOne(models.Author);
+    User.hasMany(models.Rating, {
+      foreignKey: 'userId'
+    });
+    User.hasMany(models.Download, {
+      foreignKey: 'userId'
+    });
+    User.hasOne(models.Admin, {
+      foreignKey: 'userId'
+    });
+    User.hasOne(models.Author, {
+      foreignKey: 'userId'
+    });
   };
   return User;
 };

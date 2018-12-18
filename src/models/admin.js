@@ -6,7 +6,9 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'admins'
   });
   Admin.associate = function(models) {
-    Admin.belongsTo(models.User);
+    Admin.belongsTo(models.User, {
+      foreignKey: 'userId'
+    });
   };
   return Admin;
 };
