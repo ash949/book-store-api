@@ -36,7 +36,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
   User.associate = (models) => {
-    User.hasMany(models.Rating)
+    User.hasMany(models.Rating);
+    User.hasMany(models.Download);
+    User.hasOne(models.Admin);
+    User.hasOne(models.Author);
   };
   return User;
 };

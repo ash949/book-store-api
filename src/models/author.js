@@ -6,7 +6,8 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'authors'
   });
   Author.associate = function(models) {
-    // associations can be defined here
+    Author.belongsTo(models.User);
+    Author.hasMany(models.Book);
   };
   return Author;
 };

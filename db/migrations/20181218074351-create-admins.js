@@ -29,7 +29,7 @@ module.exports = {
     }).then(() => {
       return queryInterface.addIndex('admins', ['userId'],
         {
-          indexName: 'a_user_can_have_only_one_record_in_admins_table',
+          indexName: 'a_user_can_only_have_one_admin_account',
           indicesType: 'UNIQUE'
         }
       );
