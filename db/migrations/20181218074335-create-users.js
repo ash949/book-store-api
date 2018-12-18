@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Users', {
+    return queryInterface.createTable('users', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -9,24 +9,19 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       username: {
+        allowNull: false,
         type: Sequelize.STRING,
       },
       email: {
+        allowNull: false,
         type: Sequelize.STRING,
       },
       password: {
+        allowNull: false,
         type: Sequelize.STRING
       },
       verification_token: {
         type: Sequelize.STRING
-      },
-      isAdmin: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false
-      },
-      isAuthor: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false
       },
       isRemembered: {
         type: Sequelize.BOOLEAN,
@@ -45,18 +40,18 @@ module.exports = {
         type: Sequelize.DATE
       }
     }).then(() => {
-      return queryInterface.addIndex('Users', ['username'], {
-        indexName: 'username',
+      return queryInterface.addIndex('users', ['username'], {
+        indexName: 'username_must_be_unique',
         indicesType: 'UNIQUE'
-      })
+      });
     }).then(() => {
-      return queryInterface.addIndex('Users', ['email'], {
-        indexName: 'email',
+      return queryInterface.addIndex('users', ['email'], {
+        indexName: 'email_must_be_unique',
         indicesType: 'UNIQUE'
-      })
+      });
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Users');
+    return queryInterface.dropTable('users');
   }
 };

@@ -1,32 +1,22 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('BookCategories', {
+    return queryInterface.createTable('admins', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      bookId: {
+      userId: {
         allowNull: false,
         type: Sequelize.INTEGER,
         references: {
-          model: 'Books',
+          model: 'users',
           key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
-      },
-      categoryId: {
-        allowNull: false,
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Categories',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onDelete: 'CASCADE'
       },
       createdAt: {
         allowNull: false,
@@ -37,17 +27,15 @@ module.exports = {
         type: Sequelize.DATE
       }
     }).then(() => {
-      return queryInterface.addIndex(
-        'BookCategories',
-        ['bookId', 'categoryId'],
+      return queryInterface.addIndex('admins', ['userId'],
         {
-          indexName: 'book_can_have_one_record_per_category',
+          indexName: 'a_user_can_have_only_one_record_in_admins_table',
           indicesType: 'UNIQUE'
         }
       );
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('BookCategories');
+    return queryInterface.dropTable('admins');
   }
 };

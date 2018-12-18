@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Downloads', {
+    return queryInterface.createTable('authors', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -12,21 +12,11 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER,
         references: {
-          model: 'Users',
+          model: 'users',
           key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
-      },
-      bookId: {
-        allowNull: false,
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Books',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onDelete: 'CASCADE'
       },
       createdAt: {
         allowNull: false,
@@ -36,9 +26,16 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
+    }).then(() => {
+      return queryInterface.addIndex('authors', ['userId'],
+        {
+          indexName: 'a_user_can_have_only_one_record_in_authors_table',
+          indicesType: 'UNIQUE'
+        }
+      );
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Downloads');
+    return queryInterface.dropTable('authors');
   }
 };

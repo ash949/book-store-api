@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     isRemembered: DataTypes.BOOLEAN,
     isVerified: DataTypes.BOOLEAN
   }, {
+    tableName: 'users',
     hooks: {
       beforeCreate: (user, options) => {
         return hashUserPassword(user);
@@ -36,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   });
-  User.associate = function (models) {
+  User.associate = (models) => {
     User.hasMany(models.Rating)
   };
   return User;
