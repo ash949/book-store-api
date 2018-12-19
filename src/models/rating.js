@@ -1,10 +1,10 @@
 'use strict';
+const ratingSchema = require('../../db/schemas/rating').getSchema;
+const tableName = require('../../db/schemas/rating').tableName;
+
 module.exports = (sequelize, DataTypes) => {
-  const Rating = sequelize.define('Rating', {
-    value: DataTypes.INTEGER,
-    comment: DataTypes.STRING
-  }, {
-    tableName: 'ratings'
+  const Rating = sequelize.define('Rating', ratingSchema(DataTypes), {
+    tableName: tableName
   });
   Rating.associate = function (models) {
     Rating.belongsTo(models.User, {

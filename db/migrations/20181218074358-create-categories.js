@@ -1,27 +1,11 @@
 'use strict';
+const categorySchema = require('../schemas/category').getSchema;
+const tableName = require('../schemas/category').tableName;
+
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('categories', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      name: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
-    }).then(() => {
-      return queryInterface.addIndex('categories', ['name'], {
+    return queryInterface.createTable(tableName, categorySchema(Sequelize)).then(() => {
+      return queryInterface.addIndex(tableName, ['name'], {
           indexName: 'category_name_must_be_unique',
           indicesType: 'UNIQUE'
         }
@@ -29,6 +13,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('categories');
+    return queryInterface.dropTable(tableName);
   }
 };

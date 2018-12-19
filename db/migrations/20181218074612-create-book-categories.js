@@ -1,43 +1,11 @@
 'use strict';
+const bookCategorySchema = require('../schemas/bookCategory').getSchema;
+const tableName = require('../schemas/bookCategory').tableName;
+
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('book_categories', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      bookId: {
-        allowNull: false,
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'books',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
-      categoryId: {
-        allowNull: false,
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'categories',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
-    }).then(() => {
-      return queryInterface.addIndex('book_categories', ['bookId', 'categoryId'], {
+    return queryInterface.createTable(tableName, bookCategorySchema(Sequelize)).then(() => {
+      return queryInterface.addIndex(tableName, ['bookId', 'categoryId'], {
           indexName: 'book_can_have_one_record_per_category',
           indicesType: 'UNIQUE'
         }
@@ -45,6 +13,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('book_categories');
+    return queryInterface.dropTable(tableName);
   }
 };

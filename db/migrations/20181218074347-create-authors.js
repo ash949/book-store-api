@@ -1,33 +1,11 @@
 'use strict';
+const authorSchema = require('../schemas/author').getSchema;
+const tableName = require('../schemas/author').tableName;
+
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('authors', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      userId: {
-        allowNull: false,
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'users',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
-    }).then(() => {
-      return queryInterface.addIndex('authors', ['userId'],
+    return queryInterface.createTable(tableName, authorSchema(Sequelize)).then(() => {
+      return queryInterface.addIndex(tableName, ['userId'],
         {
           indexName: 'a_user_can_only_have_one_author_account',
           indicesType: 'UNIQUE'
@@ -36,6 +14,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('authors');
+    return queryInterface.dropTable(tableName);
   }
 };

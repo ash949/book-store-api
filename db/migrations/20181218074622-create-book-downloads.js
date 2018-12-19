@@ -1,43 +1,12 @@
 'use strict';
+const downloadSchema = require('../schemas/download').getSchema;
+const tableName = require('../schemas/download').tableName;
+
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('downloads', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      userId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'users',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
-      },
-      bookId: {
-        allowNull: false,
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'books',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
-    });
+    return queryInterface.createTable(tableName, downloadSchema(Sequelize));
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('downloads');
+    return queryInterface.dropTable(tableName);
   }
 };

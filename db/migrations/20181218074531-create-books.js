@@ -1,46 +1,17 @@
 'use strict';
+const bookSchema = require('../schemas/book').getSchema;
+const tableName = require('../schemas/book').tableName;
+
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('books', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      name: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      description: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      authorId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'authors',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
-    }).then(() => {
-      return queryInterface.addIndex('books', ['name'], {
+    return queryInterface.createTable(tableName, bookSchema(Sequelize)).then(() => {
+      return queryInterface.addIndex(tableName, ['name'], {
         indexName: 'book_name_must_be_unique',
         indeciesType: 'UNIQUE'
       });
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('books');
+    return queryInterface.dropTable(tableName);
   }
 };

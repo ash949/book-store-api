@@ -1,7 +1,8 @@
 'use strict';
-
 let bcrypt = require('bcrypt');
 let sequelize = require('sequelize');
+const userSchema = require('../../db/schemas/user').getSchema;
+const tableName = require('../../db/schemas/user').tableName;
 
 function hashUserPassword(user){
   return new sequelize.Promise((resolve, reject)=>{
@@ -15,15 +16,8 @@ function hashUserPassword(user){
 }
 
 module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
-    username: DataTypes.STRING,
-    email: DataTypes.STRING,
-    password: DataTypes.STRING,
-    verification_token: DataTypes.STRING,
-    isRemembered: DataTypes.BOOLEAN,
-    isVerified: DataTypes.BOOLEAN
-  }, {
-    tableName: 'users',
+  const User = sequelize.define('User', userSchema(DataTypes), {
+    tableName: tableName,
     hooks: {
       beforeCreate: (user, options) => {
         return hashUserPassword(user);
