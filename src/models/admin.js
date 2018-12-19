@@ -1,9 +1,10 @@
 'use strict';
-const adminSchema = require('../../db/schemas/admin').getSchema;
-const tableName = require('../../db/schemas/admin').tableName;
+const schema = require('../../db/schemas/admin');
+const tableName = schema.tableName;
 
 module.exports = (sequelize, DataTypes) => {
-  const Admin = sequelize.define('Admin', adminSchema(DataTypes), {
+  let attributes = schema.getAttributes(DataTypes);
+  const Admin = sequelize.define('Admin', attributes, {
     tableName: tableName
   });
   Admin.associate = function(models) {

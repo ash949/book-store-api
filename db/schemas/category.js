@@ -1,5 +1,5 @@
 module.exports = {
-  getSchema: (Sequelize) => {
+  getAttributes: (Sequelize) => {
     return {
       id: {
         allowNull: false,

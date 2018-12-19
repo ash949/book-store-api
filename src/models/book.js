@@ -1,12 +1,40 @@
 'use strict';
-const bookSchema = require('../../db/schemas/book').getSchema;
-const tableName = require('../../db/schemas/book').tableName;
+const schema = require('../../db/schemas/book');
+const tableName = schema.tableName;
 const ratingSchema = require('../../db/schemas/rating');
 const downloadSchema = require('../../db/schemas/download');
 const bookCategorySchema = require('../../db/schemas/bookCategory');
 
 module.exports = (sequelize, DataTypes) => {
-  const Book = sequelize.define('Book', bookSchema(DataTypes), {
+  
+  let attributes = schema.getAttributes(DataTypes);
+  attributes.name.validate = {
+    notEmpty: {
+      args: true,
+      msg: "Book's name can not be empty"
+    },
+    len: {
+      max: {
+        args: 250,
+        msg: "book's name's maximum length is 250"
+      }
+    },
+  };
+
+  attributes.description.validate = {
+    notEmpty: {
+      args: true,
+      msg: "Book's description can not be empty"
+    },
+    len: {
+      max: {
+        args: 5000,
+        msg: "book's description's maximum length is 5000"
+      }
+    }
+  };
+
+  const Book = sequelize.define('Book', attributes, {
     tableName: tableName
   });
   Book.associate = (models) => {

@@ -1,9 +1,10 @@
 'use strict';
-const authorSchema = require('../../db/schemas/author').getSchema;
-const tableName = require('../../db/schemas/author').tableName;
+const schema = require('../../db/schemas/author');
+const tableName = schema.tableName;
 
 module.exports = (sequelize, DataTypes) => {
-  const Author = sequelize.define('Author', authorSchema(DataTypes), {
+  let attributes = schema.getAttributes(DataTypes);
+  const Author = sequelize.define('Author', attributes, {
     tableName: tableName
   });
   Author.associate = function(models) {

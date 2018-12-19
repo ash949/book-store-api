@@ -1,9 +1,10 @@
 'use strict';
-const downloadSchema = require('../../db/schemas/download').getSchema;
-const tableName = require('../../db/schemas/download').tableName;
+const schema = require('../../db/schemas/download');
+const tableName = schema.tableName;
 
 module.exports = (sequelize, DataTypes) => {
-  const Download = sequelize.define('Download', downloadSchema(DataTypes), {
+  let attributes = schema.getAttributes(DataTypes);
+  const Download = sequelize.define('Download', attributes, {
     tableName: tableName
   });
   Download.associate = (models) => {

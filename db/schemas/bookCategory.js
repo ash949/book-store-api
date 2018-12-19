@@ -2,7 +2,7 @@ const booksSchema = require('./book');
 const categoriesSchema = require('./category');
 
 module.exports = {
-  getSchema: (Sequelize) => {
+  getAttributes: (Sequelize) => {
     return {
       id: {
         allowNull: false,

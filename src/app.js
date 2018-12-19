@@ -29,32 +29,24 @@ app.get('/', (req, res) => {
 models.sequelize.sync().then(function () {
   app.listen(port, () => {
     process.stdout.write('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
-    models.Author.destroy({
+    models.User.destroy({
       where: {}
-    }).then(() => {
-      models.User.destroy({
-        where: {}
-      }).then(()=>{
-        models.User.create({
-          username: 'hamza',
-          email: 'test@test.com',
-          password: '123456'
-        }).then((user) => {
-          let author = models.Author.build();
-          author.setUser(user).then(()=>{
-            console.log('====================================================================');
-            user.getAuthor().then((x) => {
-              console.log(x.get({plain: true}));
-            });
-            author.getUser().then((y) => {
-              console.log(y.get({plain: true}));
-            });
+    }).then(()=>{
+      models.User.create({
+        username: 'zaasasdadadsadasdasd',
+        email: 'test@test.com',
+        password: '12345a'
+      }).then((user) => {
+        let admin = models.Admin.build();
+        user.setAdmin(admin).then(() => {
+          admin.getUser().then((user) => {
+            console.log(user.toJSON());
           });
-          
-          // user.setAuthor(author);
-          
         });
+      }).catch((err) => {
+        console.log(err.message);
       });
     });
+    
   });
 });

@@ -1,5 +1,5 @@
 module.exports = {
-  getSchema: (Sequelize) => {
+  getAttributes: (Sequelize) => {
     return {
       id: {
         allowNull: false,
@@ -9,25 +9,15 @@ module.exports = {
       },
       username: {
         allowNull: false,
-        type: Sequelize.STRING,
-        validate: {
-          notEmpty: {
-            args: true,
-            msg: "username can't be empty"
-          }
-        }
+        type: Sequelize.STRING
       },
       email: {
         allowNull: false,
-        type: Sequelize.STRING,
-        validate: {
-          isEmail: true
-        }
+        type: Sequelize.STRING
       },
       password: {
         allowNull: false,
-        type: Sequelize.STRING,
-        validate: {}
+        type: Sequelize.STRING
       },
       verification_token: {
         type: Sequelize.STRING

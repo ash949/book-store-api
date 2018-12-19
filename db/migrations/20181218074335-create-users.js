@@ -1,11 +1,10 @@
 'use strict';
-const userSchema = require('../schemas/user').getSchema;
-const tableName = require('../schemas/user').tableName;
-
+const schema = require('../schemas/user');
+const tableName = schema.tableName;
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable(tableName, userSchema(Sequelize)).then(() => {
+    return queryInterface.createTable(tableName, schema.getAttributes(Sequelize)).then(() => {
       return queryInterface.addIndex(tableName, ['username'], {
         indexName: 'username_must_be_unique',
         indicesType: 'UNIQUE'

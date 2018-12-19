@@ -1,10 +1,24 @@
 'use strict';
-const categorySchema = require('../../db/schemas/category').getSchema;
-const tableName = require('../../db/schemas/category').tableName;
+const schema = require('../../db/schemas/category');
+const tableName = schema.tableName;
 const bookCategorySchema = require('../../db/schemas/bookCategory');
 
 module.exports = (sequelize, DataTypes) => {
-  const Category = sequelize.define('Category', categorySchema(DataTypes), {
+  let attributes = schema.getAttributes(DataTypes);
+  attributes.name.validate = {
+    notEmpty: {
+      args: true,
+      msg: "Category's name can not be empty"
+    },
+    len: {
+      max: {
+        args: 30,
+        msg: "Category's name's maximum length is 30"
+      }
+    },
+  };
+
+  const Category = sequelize.define('Category', attributes, {
     tableName: tableName
   });
   Category.associate = (models) => {

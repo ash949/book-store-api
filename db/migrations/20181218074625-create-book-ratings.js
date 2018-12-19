@@ -1,10 +1,10 @@
 'use strict';
-const ratingSchema = require('../schemas/rating').getSchema;
-const tableName = require('../schemas/rating').tableName;
+const schema = require('../schemas/rating');
+const tableName = schema.tableName;
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable(tableName, ratingSchema(Sequelize)).then(() => {
+    return queryInterface.createTable(tableName, schema.getAttributes(Sequelize)).then(() => {
       return queryInterface.addIndex(tableName, ['userId', 'bookId'],
         {
           indexName: 'user_can_only_have_one_rating_per_book',

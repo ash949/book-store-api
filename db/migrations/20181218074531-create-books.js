@@ -1,10 +1,10 @@
 'use strict';
-const bookSchema = require('../schemas/book').getSchema;
-const tableName = require('../schemas/book').tableName;
+const schema = require('../schemas/book');
+const tableName = schema.tableName;
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable(tableName, bookSchema(Sequelize)).then(() => {
+    return queryInterface.createTable(tableName, schema.getAttributes(Sequelize)).then(() => {
       return queryInterface.addIndex(tableName, ['name'], {
         indexName: 'book_name_must_be_unique',
         indeciesType: 'UNIQUE'
