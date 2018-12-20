@@ -5,11 +5,7 @@ let User = require('../models').User;
 
 const getUsers = (req, res) => {
   User.findAll().then((users)=>{
-    if(users.length === 0){
-      res.statusCode = 404;
-    }else{
-      res.statusCode = 200;
-    }
+    res.statusCode = 200;
     res.json(users);
   }).catch((err)=>{
     res.statusCode = 400;

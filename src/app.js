@@ -3,6 +3,7 @@ let models = require('./models');
 let passport = require('./middlewares/auth');
 let authRouter = require('./routers/auth').router;
 let usersRouter = require('./routers/users').router;
+let categoriesRouter = require('./routers/categories').router;
 
 const port = process.env.PORT || 3000;
 
@@ -13,6 +14,7 @@ app.use(passport.initialize());
 
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
+app.use('/categories', categoriesRouter);
 
 app.get('/', (req, res) => {
   res.send('hello');
@@ -27,26 +29,7 @@ app.get('/', (req, res) => {
 // });
 
 models.sequelize.sync().then(function () {
-  app.listen(port, () => {
-    process.stdout.write('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n');
-    models.User.destroy({
-      where: {}
-    }).then(()=>{
-      models.User.create({
-        username: 'zaasasdadadsadasdasd',
-        email: 'test@test.com',
-        password: '12345a'
-      }).then((user) => {
-        let admin = models.Admin.build();
-        user.setAdmin(admin).then(() => {
-          admin.getUser().then((user) => {
-            console.log(user.toJSON());
-          });
-        });
-      }).catch((err) => {
-        console.log(err.message);
-      });
-    });
-    
-  });
+  app.listen(port, () => {});
 });
+
+module.exports = app;

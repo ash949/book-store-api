@@ -11,10 +11,8 @@ module.exports = (sequelize, DataTypes) => {
       msg: "Category's name can not be empty"
     },
     len: {
-      max: {
-        args: 30,
-        msg: "Category's name's maximum length is 30"
-      }
+      args: [1, 30],
+      msg: "Category's name's maximum length is 30"
     },
   };
 
