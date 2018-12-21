@@ -16,6 +16,7 @@ for (let i = 0; i < factoriesFiles.length; i++){
     continue;
   }else{
     require(path.join(__dirname, factoriesFiles[i]))(factory);
+
   } 
 }
 

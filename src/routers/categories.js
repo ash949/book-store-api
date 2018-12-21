@@ -5,20 +5,27 @@ const Category = require('../models').Category;
 router.get('/', (req, res) => {
   Category.findAll().then(categories => {
     res.statusCode = 200;
-    res.json(categories);
-  }).catch(err => {
-    res.statusCode = 400;
-    res.send(err.message);
+    res.json({
+      categories: categories,
+      err: null
+    });
   });
 });
 
 router.get('/:id', (req, res) => {
+  let jsonToReturn = {
+    category: null,
+    err: null
+  };
   Category.findByPk(req.params.id).then(category => {
-    res.statusCode = 200;
-    res.json(category);
-  }).catch(err => {
-    res.statusCode = 400;
-    res.send(err.message);
+    if(category){
+      res.statusCode = 200;
+      jsonToReturn.category = category;
+    }else{
+      res.statusCode = 404;
+      jsonToReturn.err = 'category not found';
+    }
+    res.json(jsonToReturn);
   });
 });
 
