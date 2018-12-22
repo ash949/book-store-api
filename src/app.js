@@ -28,8 +28,22 @@ app.get('/', (req, res) => {
 //   res.send(req.body);
 // });
 
-models.sequelize.sync().then(function () {
-  app.listen(port, () => {});
+models.sequelize.sync({logging: false}).then(function () {
+  app.listen(port, () => {
+    console.log(models.User.name);
+    // models.User.destroy({where: {}}).then(() => {
+    //   models.User.create({username : 'aaaaaaaaa', email: 'aaa@aaa.com', password: '123456'}).then(user => {
+    //     console.log(user.toJSON());
+    //     user.update({username : 'aaaaaaaaa', email: 'aaa@aaa.com'}).then(() => {
+    //       console.log(user.toJSON());
+    //     }).catch(err => {
+    //       console.log(err.message);
+    //     });
+    //   }).catch(err => {
+    //     console.log(err.message);
+    //   });
+    // });
+  });
 });
 
 module.exports = app;

@@ -1,139 +1,271 @@
 
-const factory = require('../factories');
-const chai = require('chai');
-const chaiHTTP = require('chai-http');
-const server = require('../../src/app');
 const Category = require('../../src/models').Category;
-const should = chai.should();
-const expect = chai.expect;
+const testGetAllEndPoint = require('../helpers').testGetAllEndPoint;
+const testGetOneEndPoint = require('../helpers').testGetOneEndPoint;
+const testPostEndPoint = require('../helpers').testPostEndPoint;
+const testPutEndPoint = require('../helpers').testPutEndPoint;
+const testDeleteEndPoint = require('../helpers').testDeleteEndPoint;
 
-chai.use(chaiHTTP);
+testGetAllEndPoint(Category);
 
-let categoryAttributes = [];
+testGetOneEndPoint(Category);
 
-beforeEach(done => {
-  factory.cleanTable(Category).then(() => {
-    done();
-  });
-});
+testPostEndPoint(Category, [], []);
 
-before(()=> {
-  categoryAttributes = Object.keys(Category.rawAttributes);
-});
+testPutEndPoint(Category, {name: 'comedy'}, [], []);
 
-describe('GET /categories', () => {
-  it("Response's status code is expected to be 200", done => {
-    chai.request(server).get('/categories').end( (err, res) => {
-      expect(res.status).to.eql(200);
-      done();
-    });
-  });
-  it("Response's body is expected have 'categories' property", done => {
-    chai.request(server).get('/categories').end( (err, res) => {
-      expect(res.body.categories).to.not.be.undefined;
-      done();
-    });
-  });
-  it("Response's body is expected have 'err' property that is equal to null", done => {
-    chai.request(server).get('/categories').end( (err, res) => {
-      expect(res.body.err).to.be.null;
-      done();
-    });
-  });
-  context('If there is one or more categories stored', () => {
-    beforeEach((done) => {
-      factory.createMany('category', Math.ceil(Math.random()*10)).then((categories) => {
-        done();
-      });
-    });
-    it("Returned array's length expected to be greater than 0", done => {
-      chai.request(server).get('/categories').end( (err, res) => {
-        expect(res.body.categories.length).to.be.greaterThan(0);
-        done();
-      });
-    });
-    it("each object in the returned array is expected to have Category Model attributes", done => {
-      chai.request(server).get('/categories').end( (err, res) => {
-        res.body.categories.forEach(category => {
-          for (let i = 0; i < categoryAttributes.length; i++) {
-            if (!category.hasOwnProperty(categoryAttributes[i])) {
-              expect.fail();
-              break;
-            }
-          }
-          expect(true).to.equal(true);
-        });
-        done();
-      });
-    });
-  });
-  context('If categories table is empty', () => {
-    it("Returned array's length expected to be 0", done => {
-      chai.request(server).get('/categories').end( (err, res) => {
-        expect(res.body.categories.length).to.be.eql(0);
-        done();
-      });
-    });
-  });
-});
+testDeleteEndPoint(Category);
 
-describe('GET /categories/:id', () => {
-  let categoryId = 123;
-  let res = null;
-  before(done => {
-    chai.request(server).get(`/categories/${categoryId}`).end((err, response) => {
-      res = response;
-      done();
-    });
-  });
+
+// describe('POST /categories', () => {
+//   let testsCasesToFail = [
+//     {
+//       context: "If posted data is empty object",
+//       expectedMessage: 'category name cannot be null',
+//       data: {}
+//     },
+//     {
+//       context: "If posted category.name is empty string",
+//       expectedMessage: 'category name cannot be empty',
+//       data: { name: '   '}
+//     },
+//     {
+//       context: "If posted category.name is a number",
+//       expectedMessage: 'category name must be a string',
+//       data: { name: 123 }
+//     },
+//     {
+//       context: "If posted category.name's length > 30",
+//       expectedMessage: "category name's max length is 30",
+//       data: { name: 'a'.repeat(40) }
+//     },
+//     {
+//       context: "If posted object has an unpermitted property",
+//       expectedMessage: 'posted data contain unpermitted content',
+//       data: { name: 'comedy', unpermitted_data: 'text' }
+//     },
+//   ];
+
+//   let validCategoryData = { name: "comedy" };
+
+//   let res = null;
+//   context("If posted object contains only 'name' property and contains a (1 <= length <= 30) string", () => {
+//     before(done => {
+//       res = null;
+//       postCategoryData(Category, validCategoryData, server).then(response => {
+//         res = response;
+//         done();
+//       });
+//     });
+//     after(done => {
+//       factory.cleanTable(Category).then(() => {
+//         done();
+//       });
+//     });
+//     it("Response is expected to have 'category' property", () => {
+//       expect(res.body["category"]).to.not.be.undefined;
+//     });
+//     context("If category name is not already registered", () => {
+//       it('Response is expected to have status code 201', () => {
+//         expect(res.status).to.equal(201);
+//       });
+//       it("Response is expected to have an object assigned to `category` property and has the attributes of Category Model", () => {
+//         expect(checkAttributes(res.body.category, Category)).to.be.true;
+//       });
+//     });
+    
+//     context("If category name is already registered", () => {
+//       before(done => {
+//         res = null;
+//         postCategoryData(Category, validCategoryData, server).then(response => {
+//           res = response;
+//           done();
+//         });
+//       });
+
+//       it('Response is expected to have status code 400', () => {
+//         expect(res.status).to.equal(400);
+//       });
+//       it("Response is expected to have 'category' property set to null", () => {
+//         expect(res.body.category).to.be.null;
+//       });
+//       it("Response is expected to have 'err' property set to 'posted category name is already registered'", () => {
+//         expect(res.body.err.toLowerCase()).to.equal('category name is already registered');
+//       });
+//     });
+//   });
+
+//   context('If posted data is invalid', () => {
+//     testsCasesToFail.forEach(testCase => {
+//       context(testCase.context, () => {
+//         before(done => {
+//           res = null;
+//           postCategoryData(Category, testCase.data, server).then(response => {
+//             res = response;
+//             done();
+//           });
+//         });
+//         after(done => {
+//           factory.cleanTable(Category).then(() => {
+//             done();
+//           });
+//         });
+//         it('Response is expected to have status code 400', () => {
+//           expect(res.status).to.equal(400);
+//         });
+//         it("Response is expected to have 'category' property set to null", () => {
+//           expect(res.body.category).to.be.null;
+//         });
+//         it("Response is expected to have its 'err' property set to: " + testCase.expectedMessage.toLowerCase(), () => {
+//           expect(res.body.err.toLowerCase()).to.equel(testCase.expectedMessage);
+//         });
+//       });
+//     });
+//   });
   
-  it("Response is expected to have 'category' property", () => {
-    expect(res.body.category).to.not.be.undefined;
-  });
-  
-  context('Requesting a non-existing category', () => {
-    it('Response should have 404 status code', () => {
-      expect(res).to.have.status(404);
-    });
-    it("Response's 'category' property is expected to be set to 'null'", () => {
-      expect(res.body.category).to.be.null;
-    });
-    it("Response should have error(err) message of 'category not found'", () => {
-      expect(res.body.err.toLowerCase()).to.equal('category not found');
-    });
-  });
+// });
 
-  context('Requesting an existing category', () => {
-    let response = null;
-    before(done => {
-      factory.create('category').then(category => {
-        categoryId = category.id;
-        chai.request(server).get(`/categories/${categoryId}`).end((err, response) => {
-          res = response;
-          done();
-        });
-      });
-    });
-    it('Should respond with 200 status code', () => {
-      expect(res).to.have.status(200);
-    });
-    it("Response's 'err' property is expected to be set to 'null'", () => {
-      expect(res.body.err).to.be.null;
-    });
-    it("Response is expected to be an object with 'category' property",() => {
-      expect(res.body.category).to.not.be.undefined;
-    });
-    it('Returned category is expected to have Category Model attributes', () => {
-      for (let i = 0; i < categoryAttributes.length; i++) {
-        if (!res.body.category.hasOwnProperty(categoryAttributes[i])) {
-          expect.fail();
-          break;
-        }
-      }
-      expect(true).to.equal(true);
-    });
-    it('The id of the returned object will equel the one passed in the URL', () => {
-      expect(res.body.category.id).to.equal(categoryId);
-    });
-  });
-});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const HttpVerb = 'PATCH';
+// const Model = Category;
+
+
+
+
+
+
+
+// let testCasesWithInvalidUpdateData = [
+//   {
+//     expectedStatusCode: 400,
+//     context: `If posted category name is empty string`,
+//     expectedErrorMessage: 'category name cannot be empty',
+//     data: { name: '   '}
+//   },
+//   {
+//     expectedStatusCode: 400,
+//     context: "If posted category name is a number",
+//     expectedErrorMessage: 'category name must be a string',
+//     data: { name: 123 }
+//   },
+//   {
+//     expectedStatusCode: 400,
+//     context: "If posted category name's length > 30",
+//     expectedErrorMessage: "category name's max length allowed is 30",
+//     data: { name: 'a'.repeat(40) }
+//   },
+//   {
+//     expectedStatusCode: 400,
+//     context: "If posted data has an unpermitted properties",
+//     expectedErrorMessage: 'posted data contain unpermitted properties',
+//     data: { name: 'comedy_new', unpermitted_data: 'text' }
+//   }
+// ];
+
+// let testCasesWithValidUpdateData = [
+//   {
+//     expectedStatusCode: 200,
+//     context: "If posted data contains 'name' property only and which has a (1 <= length <= 30) string",
+//     data: { name: 'comedy_new' }
+//   },
+//   {
+//     expectedStatusCode: 200,
+//     context: "If posted data is empty object",
+//     data: {}
+//   },
+//   {
+//     expectedStatusCode: 200,
+//     context: "If posted data contains 'name' property only and has the same data as the old 'name' value",
+//     data: { name: 'comedy' }
+//   }
+// ];
+
+
+// require('../helpers').testRestFulEndPount(
+//   'PATCH',
+//   Category,
+//   testCasesWithValidUpdateData,
+//   testCasesWithInvalidUpdateData
+// );
+
+
+
+
+// describe('DELETE /categories/:id', () => {});
+
+
+
+    // let testCasesWithInvalidUpdateData = [
+    //   {
+    //     expectedStatusCode: 400,
+    //     context: `If posted category name is empty string`,
+    //     expectedErrorMessage: 'category name cannot be empty',
+    //     data: { name: '   '}
+    //   },
+    //   {
+    //     expectedStatusCode: 400,
+    //     context: "If posted category name is a number",
+    //     expectedErrorMessage: 'category name must be a string',
+    //     data: { name: 123 }
+    //   },
+    //   {
+    //     expectedStatusCode: 400,
+    //     context: "If posted category name's length > 30",
+    //     expectedErrorMessage: "category name's max length allowed is 30",
+    //     data: { name: 'a'.repeat(40) }
+    //   },
+    //   {
+    //     expectedStatusCode: 400,
+    //     context: "If posted data has an unpermitted properties",
+    //     expectedErrorMessage: 'posted data contain unpermitted properties',
+    //     data: { name: 'comedy_new', unpermitted_data: 'text' }
+    //   }
+    // ];
+
+    // let testCasesWithValidUpdateData = [
+    //   {
+    //     expectedStatusCode: 200,
+    //     context: "If posted data contains 'name' property only and which has a (1 <= length <= 30) string",
+    //     data: { name: 'comedy_new' }
+    //   },
+    //   {
+    //     expectedStatusCode: 200,
+    //     context: "If posted data is empty object",
+    //     data: {}
+    //   },
+    //   {
+    //     expectedStatusCode: 200,
+    //     context: "If posted data contains 'name' property only and has the same data as the old 'name' value",
+    //     data: { name: 'comedy' }
+    //   }
+    // ];
+    // describe('DELETE /categories/:id', () => {});

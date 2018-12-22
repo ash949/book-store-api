@@ -7,7 +7,7 @@ module.exports = {
     return queryInterface.createTable(tableName, schema.getAttributes(Sequelize)).then(() => {
       return queryInterface.addIndex(tableName, ['name'], {
           indexName: 'category_name_must_be_unique',
-          indicesType: 'UNIQUE'
+          indicesType: 'UNIQUE',
         }
       );
     });

@@ -25,3 +25,7 @@ factory.cleanTable = (Model) => {
 };
 
 module.exports = factory;
+
+factory.checkAttributes = (object, Model) => {
+  
+}

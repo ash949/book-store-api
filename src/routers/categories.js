@@ -26,7 +26,29 @@ router.get('/:id', (req, res) => {
       jsonToReturn.err = 'category not found';
     }
     res.json(jsonToReturn);
+  }).catch(err => {
+    console.log('WTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTFGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFff');
+    res.statusCode = 400;
+    jsonToReturn.err = err.message;
+    res.json(jsonToReturn);
   });
+});
+
+router.post('/', (req, res) => {
+  let jsonToReturn = {
+    category: null,
+    err: null
+  };
+  Category.create(req.body).then(category => {
+    res.statusCode = 201;
+    jsonToReturn.category = category.toJSON();
+    res.json(jsonToReturn);
+  }).catch(err => {
+    res.statusCode = 400;
+    jsonToReturn.err = err.message;
+    res.json(jsonToReturn);
+  });
+  
 });
 
 

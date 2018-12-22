@@ -9,6 +9,10 @@ module.exports = {
       },
       name: {
         allowNull: false,
+        unique: {
+          args: true,
+          msg: 'category name is already registered'
+        },
         type: Sequelize.STRING
       },
       createdAt: {
