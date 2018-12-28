@@ -1,11 +1,11 @@
 process.env.NODE_ENV = 'test';
 const Category = require('../../src/models').Category;
-const expectToHaveErrorMesssage = require('../helpers').expectToHaveErrorMesssage;
-const testGetAllEndPoint = require('../helpers').testGetAllEndPoint;
-const testGetOneEndPoint = require('../helpers').testGetOneEndPoint;
-const testPostEndPoint = require('../helpers').testPostEndPoint;
-const testPutEndPoint = require('../helpers').testPutEndPoint;
-const testDeleteEndPoint = require('../helpers').testDeleteEndPoint;
+const expectToHaveErrorMesssage = require('./helpers').expectToHaveErrorMesssage;
+const testGetAllEndPoint = require('./helpers').testGetAllEndPoint;
+const testGetOneEndPoint = require('./helpers').testGetOneEndPoint;
+const testPostEndPoint = require('./helpers').testPostEndPoint;
+const testPutEndPoint = require('./helpers').testPutEndPoint;
+const testDeleteEndPoint = require('./helpers').testDeleteEndPoint;
 const attributes = require('../../db/schemas/category').getAttributes(
   require('sequelize')
 );

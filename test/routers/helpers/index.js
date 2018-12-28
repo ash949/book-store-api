@@ -1,9 +1,9 @@
 process.env.NODE_ENV = 'test';
-const factory = require('../factories');
+const factory = require('../../factories');
 const chai = require('chai');
 const chaiHTTP = require('chai-http');
 chai.use(chaiHTTP);
-const server = require('../../src/app');
+const server = require('../../../src/app');
 const should = chai.should();
 const expect = chai.expect;
 
