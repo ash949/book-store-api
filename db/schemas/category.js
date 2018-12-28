@@ -13,7 +13,17 @@ module.exports = {
           args: true,
           msg: 'category name is already registered'
         },
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        validate: {
+          notEmpty: {
+            args: true,
+            msg: "Category name can not be empty"
+          },
+          len: {
+            args: [1, 30],
+            msg: "Category's name's maximum length is 30"
+          }
+        }
       },
       createdAt: {
         allowNull: false,

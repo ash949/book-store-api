@@ -5,14 +5,15 @@ module.exports = {
     password: 'cf123',
     database: 'book_store_db_development',
     host: '127.0.0.1',
-    dialect: 'postgres',
+    dialect: 'postgres'
   },
   test: {
     username: 'test',
     password: 'cf123',
     database: 'database_test',
     host: '127.0.0.1',
-    dialect: 'postgres'
+    dialect: 'postgres',
+    // logging: false
   },
   production: {
     username: process.env.DB_USERNAME,
