@@ -1,6 +1,5 @@
 process.env.NODE_ENV = 'test';
 const Category = require('../../src/models').Category;
-const expectToHaveErrorMesssage = require('./helpers').expectToHaveErrorMesssage;
 const testGetAllEndPoint = require('./helpers').testGetAllEndPoint;
 const testGetOneEndPoint = require('./helpers').testGetOneEndPoint;
 const testPostEndPoint = require('./helpers').testPostEndPoint;

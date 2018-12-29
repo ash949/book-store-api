@@ -9,15 +9,45 @@ module.exports = {
       },
       username: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        unique: {
+          args: true,
+          msg: 'this username is already registered'
+        },
+        validate: {
+          len: {
+            args: [6, 20],
+            msg: "username's length must be in [6, 20]"
+          },
+          notEmpty: {
+            args: true,
+            msg: "username can't be empty"
+          }
+        }
       },
       email: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        unique: {
+          args: true,
+          msg: 'this Email is already registered'
+        },
+        validate: {
+          isEmail: {
+            args: true,
+            msg: 'entered Email is not valid'
+          }
+        }
       },
       password: {
         allowNull: false,
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        validate: {
+          len: {
+            args: 6,
+            msg: `password's length must be at least 6`
+          }
+        }
       },
       verification_token: {
         type: Sequelize.STRING
