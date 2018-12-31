@@ -1,9 +1,10 @@
 let express = require('express');
-let models = require('./models');
 let passport = require('./middlewares/auth');
 let authRouter = require('./routers/auth').router;
 let usersRouter = require('./routers/users').router;
 let categoriesRouter = require('./routers/categories').router;
+let booksRouter = require('./routers/books').router;
+let models = require('./models');
 
 const port = process.env.PORT || 3000;
 
@@ -15,6 +16,7 @@ app.use(passport.initialize());
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/categories', categoriesRouter);
+app.use('/books', booksRouter);
 
 app.get('/', (req, res) => {
   res.send('hello');
@@ -29,7 +31,23 @@ app.post('/', (req, res) => {
 });
 
 models.sequelize.sync().then(function () {
-  app.listen(port, () => {});
+  app.listen(port, () => {
+    models.Category.destroy({where: {}}).then(() => {
+      models.User.destroy({where:{}}).then(() => {
+        Promise.all([
+          models.Category.create({name: 'horror'}),
+          models.Category.create({name: 'tech'}),
+          models.Category.create({name: 'comedy'}),
+          models.Book.destroy({where: {}})
+        ]).then(() => {
+          console.log('====================================================================================');
+          console.log('====================================================================================');
+          console.log('====================================================================================');
+        });
+      });
+    });
+    
+  });
 });
 
 module.exports = app;

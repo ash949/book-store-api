@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
   });
   Admin.associate = function(models) {
     Admin.belongsTo(models.User, {
-      foreignKey: 'userId'
+      foreignKey: 'id'
     });
   };
   return Admin;

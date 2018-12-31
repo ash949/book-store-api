@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
   });
   Author.associate = function(models) {
     Author.belongsTo(models.User, {
-      foreignKey: 'userId'
+      foreignKey: 'id'
     });
     Author.hasMany(models.Book, {
       foreignKey: 'authorId'

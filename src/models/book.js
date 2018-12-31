@@ -4,39 +4,37 @@ const tableName = schema.tableName;
 const ratingSchema = require('../../db/schemas/rating');
 const downloadSchema = require('../../db/schemas/download');
 const bookCategorySchema = require('../../db/schemas/bookCategory');
+const db = require('./index');
+
+
+
 
 module.exports = (sequelize, DataTypes) => {
-  
-  let attributes = schema.getAttributes(DataTypes);
-  attributes.name.validate = {
-    notEmpty: {
-      args: true,
-      msg: "Book's name can not be empty"
-    },
-    len: {
-      max: {
-        args: 250,
-        msg: "book's name's maximum length is 250"
-      }
-    },
-  };
-
-  attributes.description.validate = {
-    notEmpty: {
-      args: true,
-      msg: "Book's description can not be empty"
-    },
-    len: {
-      max: {
-        args: 5000,
-        msg: "book's description's maximum length is 5000"
-      }
-    }
-  };
-
+  const attributes = schema.getAttributes(DataTypes);
   const Book = sequelize.define('Book', attributes, {
     tableName: tableName
   });
+
+  
+
+  Book.setScopes = (models) => {
+    Book.addScope('defaultScope', {
+      include: [
+        {
+          model: models.BookCategory,
+          include: [
+            {
+              model: models.Category
+            }
+          ]
+        },
+        {
+          model: models.Author,
+        }
+      ]
+    }, { override: true });
+  };
+  
   Book.associate = (models) => {
     Book.belongsTo(models.Author, {
       foreignKey: 'authorId'
@@ -44,17 +42,36 @@ module.exports = (sequelize, DataTypes) => {
     Book.belongsToMany(models.User, {
       as: 'Raters',
       through: ratingSchema.tableName,
-      foreignKey: 'bookId'
+      foreignKey: 'bookId',
+      otherKey: 'userId'
     });
     Book.belongsToMany(models.User, {
       as: 'Downloaders',
       through: downloadSchema.tableName,
+      foreignKey: 'bookId',
+      otherKey: 'userId'
+    });
+    Book.hasMany(models.BookCategory, {
       foreignKey: 'bookId'
     });
-    Book.belongsToMany(models.Category, {
-      through: bookCategorySchema.tableName,
-      foreignKey: 'bookId'
-    });
+
+    Book.addInstanceMethods = (models) => {
+      Book.prototype.getFullDetails = function(){
+        let book = this;
+        return Book.findByPk(book.id, {
+          include: [
+            {
+              model: models.BookCategory,
+              include: [
+                {
+                  model: models.Category
+                }
+              ]
+            }
+          ]
+        });
+      }
+    }
   };
   return Book;
 };

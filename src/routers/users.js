@@ -2,8 +2,9 @@
 let express = require('express');
 let router = express.Router();
 let User = require('../models').User;
+let booksRouter = require('./books');
 
-const permittedParameters = ['username', 'email', 'password'];
+const permittedParameters = ['username', 'email', 'password', 'isAuthor', 'isAdmin'];
 
 const permitParams = require('./helpers').permitParams;
 
@@ -50,10 +51,21 @@ const createUser = (req, res) => {
     err: null
   };
   if(permitParams(req.body, permittedParameters)){
-    User.create(req.body).then((user)=>{
-      res.statusCode = 201;
+    User.create(req.body).then(user => {
       jsonToReturn.user = user.toJSON();
-      res.json(jsonToReturn);
+      Promise.all([
+        user.setAuthor(req.body.isAuthor),
+        user.setAdmin(req.body.isAdmin),
+      ]).then(results => {
+        if(results[0]){
+          jsonToReturn.user.isAuthor = true;
+        }
+        if(results[1]){
+          jsonToReturn.user.isAdmin = true;
+        }
+        res.statusCode = 201;
+        res.json(jsonToReturn);
+      });
     }).catch((err)=>{
       res.statusCode = 400;
       jsonToReturn.err = err.message;
@@ -72,7 +84,7 @@ const updateUser = (req, res) => {
     err: null
   };
   if(permitParams(req.body, permittedParameters)){
-    User.findByPk(req.params.id).then((user)=>{
+    User.findByPk(req.params.id).then(user => {
       if(user){
         user.update(req.body).then(()=>{
           res.statusCode = 200;
@@ -106,7 +118,7 @@ const deleteUser = (req, res) => {
     user: null,
     err: null
   };
-  User.findByPk(req.params.id).then( (user)=>{
+  User.findByPk(req.params.id).then(user => {
     if(user){
       userToReturn = user.toJSON();
       user.destroy();
@@ -131,6 +143,7 @@ router.patch('/:id', updateUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 
+router.use('/:authorId/books', booksRouter.router);
 
 module.exports = {
   router: router,

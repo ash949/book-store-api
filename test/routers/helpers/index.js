@@ -364,7 +364,6 @@ const self = module.exports = {
             });
             it(`Response is expected to have 'err' property containing '${testCase.expectedError}'`, done => {
               chai.request(server).post(`/${resourceName}`).send(testCase.data).end((err, res) => {
-                console.log(res.body.err);
                 expect(res.body.err.toLowerCase()).to.contain(testCase.expectedError.toLowerCase());
                 done();
               });
@@ -516,7 +515,6 @@ const self = module.exports = {
               });
               it(`Response is expected to have 'err' property containing '${testCase.expectedError}'`, done => {
                 chai.request(server).put(`/${resourceName}/${testObjectId}`).send(testCase.data).end((err, res) => {
-                  console.log(res.body.err);
                   expect(res.body.err.toLowerCase()).to.contain(testCase.expectedError.toLowerCase());
                   done();
                 });

@@ -3,7 +3,7 @@ const schema = require('../../db/schemas/download');
 const tableName = schema.tableName;
 
 module.exports = (sequelize, DataTypes) => {
-  let attributes = schema.getAttributes(DataTypes);
+  const attributes = schema.getAttributes(DataTypes);
   const Download = sequelize.define('Download', attributes, {
     tableName: tableName
   });

@@ -53,10 +53,12 @@ module.exports = {
         type: Sequelize.STRING
       },
       isRemembered: {
+        allowNull: false,
         type: Sequelize.BOOLEAN,
         defaultValue: false
       },
       isVerified: {
+        allowNull: false,
         type: Sequelize.BOOLEAN,
         defaultValue: false
       },

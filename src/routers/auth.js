@@ -26,7 +26,10 @@ const loginUser = (req, res) => {
   });
 };
 
+const signupUser = (req, res) => {};
+
 router.post('/login', loginUser);
+router.post('/signup', signupUser);
 
 module.exports = {
   router: router,

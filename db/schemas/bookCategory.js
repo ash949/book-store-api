@@ -40,5 +40,5 @@ module.exports = {
       }
     }
   },
-  tableName: 'book_categories'
+  tableName: 'bookCategories'
 };
