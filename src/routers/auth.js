@@ -4,6 +4,7 @@ let User = require('../models').User;
 let bcrypt = require('bcrypt');
 let authSecrets = require('../../config/auth');
 let router = express.Router();
+const permitParams = require('./helpers').permitParams;
 
 const loginUser = (req, res) => {
   User.findOne({ where: { email: req.body.email } }).then((user) => {
@@ -26,12 +27,41 @@ const loginUser = (req, res) => {
   });
 };
 
-const signupUser = (req, res) => {};
+const signupUser = (req, res) => {
+  let jsonToReturn = {
+    user: null,
+    err: []
+  };
+  const permittedParameters = ['username', 'email', 'password'];
+  let i = 0;
+  (new Promise((resolve, reject) => {
+    if(permitParams(req.body, permittedParameters)){
+      resolve();
+    }else{
+      reject('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
+    }
+  }))
+  .then(() => {
+    return User.create(req.body);
+  })
+  .then(user => {
+    jsonToReturn.user = user.toJSON();
+  })
+  .catch(err => {
+    let errorToPush = err.message || err;
+    jsonToReturn.err.push(errorToPush);
+  })
+  .finally(() => {
+    if(jsonToReturn.err.length > 0){
+      res.statusCode = 400;
+    }else{
+      res.statusCode = 201;
+    }
+    res.json(jsonToReturn);
+  });    
+};
 
 router.post('/login', loginUser);
 router.post('/signup', signupUser);
 
-module.exports = {
-  router: router,
-  loginUser: loginUser
-};
+module.exports = router;

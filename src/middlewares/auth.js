@@ -15,7 +15,8 @@ passport.use(new JwtStrategy(options, (payload, done) => {
       return done(err, false);
     }
     if (user) {
-      user = user.get({ plain: true });
+      
+      user = user.toJSON();
       delete user.password;
       return done(null, user);
     } else {

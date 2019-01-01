@@ -64,53 +64,45 @@ module.exports = (sequelize, DataTypes) => {
       });
     };
 
-    User.prototype.setAuthor = function(flag){
-      let user = this;
-      if(flag){
-        return new Promise((resolve, reject) => { 
-          models.Author.create({id: user.id}).then(author => {
-            resolve(true);
-          }).catch(err => {
-            reject(err.message);
-          });
-        });
-      }else{
-        return new Promise((resolve, reject) => {
-          models.Author.findByPk(user.id).then(author => {
-            if(author){
-              author.destroy();
-            }
-            resolve(false);
-          }).catch(err => {
-            reject(err.message);
-          });
-        });
-      }
-    }
+    // User.prototype.setAuthor = function(flag){
+    //   let user = this;
+    //   if(flag === true){
+    //     models.Author.create({id: user.id}).then(author => {
+    //       return Promise.resolve(true);
+    //     }).catch(err => {
+    //       return Promise.resolve(err.message);
+    //     });
+    //   }else if(flag === false){
+    //     models.Author.findByPk(user.id).then(author => {
+    //       if(author){
+    //         author.destroy();
+    //       }
+    //       return Promise.resolve(false);
+    //     }).catch(err => {
+    //       return Promise.resolve(err.message);
+    //     });
+    //   }else{
+    //     return Promise.resolve('invalid value passed to setAuthor')
+    //   }
+    // }
 
-    User.prototype.setAdmin = function(flag){
-      let user = this;
-      if(flag){
-        return new Promise((resolve, reject) => {
-          models.Admin.create({id: user.id}).then(admin => {
-            resolve(true);
-          }).catch(err => {
-            reject(err.message);
-          });
-        });
-      }else{
-        return new Promise((resolve, reject) => {
-          models.Admin.findByPk(user.id).then(admin => {
-            if(admin){
-              admin.destroy();
-            }
-            resolve(false);
-          }).catch(err => {
-            reject(err.message);
-          });
-        });
-      }
-    }
+    // User.prototype.setAdmin = function(flag){
+    //   let user = this;
+    //   if(flag === true){
+    //     return models.Admin.create({id: user.id});
+    //   }else if(flag === false){
+    //     models.Admin.findByPk(user.id).then(admin => {
+    //       if(admin){
+    //         admin.destroy();
+    //       }
+    //       return Promise.resolve(false);
+    //     }).catch(err => {
+    //       return Promise.resolve(err.message);
+    //     });
+    //   }else{
+    //     return Promise.resolve('invalid value passed to setAdmin')
+    //   }
+    // }
 
     User.prototype.hashPassword = function(){
       let user = this;

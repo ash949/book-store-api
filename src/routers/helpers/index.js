@@ -23,5 +23,26 @@ module.exports = {
     jsonToReturn[modelName] = object;
     jsonToReturn.err = error;
     res.json(jsonToReturn);
+  },
+  isAdmin: (req) => {
+    if(req.hasOwnProperty('user') && req.user.Admin){
+      return true;
+    }else{
+      return false;
+    }
+  },
+  isAuthor: (req) => {
+    if(req.hasOwnProperty('user') && req.user.Author){
+      return true;
+    }else{
+      return false;
+    }
+  },
+  isSameToLoggedInUser: (req, user) => {
+    if(req.hasOwnProperty('user') && req.user.id == user.id){
+      return true;
+    }else{
+      return false;
+    }
   }
 };
