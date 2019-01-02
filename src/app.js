@@ -1,16 +1,20 @@
 let express = require('express');
+const bodyParser = require('body-parser');
 let passport = require('./middlewares/auth');
 let authRouter = require('./routers/auth');
 let usersRouter = require('./routers/users');
 let categoriesRouter = require('./routers/categories').router;
 let booksRouter = require('./routers/books').router;
 let models = require('./models');
+let os = require('os');
+
 
 const port = process.env.PORT || 3000;
 
 let app = express();
 
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded()); 
 app.use(passport.initialize());
 
 app.use('/auth', authRouter);
@@ -32,23 +36,7 @@ app.post('/', (req, res) => {
 
 models.sequelize.sync().then(function () {
   app.listen(port, () => {
-    models.Category.destroy({where: {}}).then(() => {
-      models.User.destroy({where:{id: 13123123}}).then(() => {
-        Promise.all([
-          models.Category.create({name: 'horror'}).then(c => {
-          }),
-          models.Category.create({name: 'tech'}),
-          models.Category.create({name: 'comedy'}),
-          models.Book.destroy({where: {}})
-        ]).then(() => {
-          console.log('====================================================================================');
-          console.log('====================================================================================');
-          console.log('====================================================================================');
-          
-        });
-      });
-    });
-    
+    console.log('\n'.repeat(40));
   });
 });
 

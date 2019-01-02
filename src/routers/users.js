@@ -88,7 +88,6 @@ const createUser = (req, res) => {
     err: []
   };
   let tempUser = null;
-  let i = 0;
   (new Promise((resolve, reject) => {
     if(permitParams(req.body, permittedParameters)){
       resolve();
@@ -147,7 +146,6 @@ const createUser = (req, res) => {
     return User.findByPk(jsonToReturn.user.id);
   })
   .then(user => {
-    console.log(user.toJSON());
     jsonToReturn.user = user.toJSON();
   })
   .catch(err => {
@@ -311,5 +309,7 @@ router.post('/', createUser);
 router.patch('/:id', updateUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
+
+router.use('/:authorId/books', booksRouter.router);
 
 module.exports = router;

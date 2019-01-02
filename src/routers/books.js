@@ -1,18 +1,48 @@
 'use strict';
 let express = require('express');
 let router = express.Router({mergeParams: true});
+
+const util = require('util');
+const fs = require('fs');
+const multer = require('multer');
+const uploadPath = require('../../config/app').bookUploadPath;
+
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadPath)
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + Date.now() + '.pdf')
+  }
+})
+
+const bookUploader = multer(
+  {
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+      if(permitParams(req.body, permittedParameters)){
+        cb(null, true);
+      }else{
+        cb(new Error('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters))
+      }
+    }
+  }
+);
+
+const uploadBook = util.promisify(bookUploader.single('bookPDF'));
+
 const Book = require('../models').Book;
-const User = require('../models').User;
-const Author = require('../models').Author;
-const Category = require('../models').Category;
 const BookCategory = require('../models').BookCategory;
 
-const permittedParameters = ['name', 'description', 'authorId', 'BookCategories'];
+
+const permittedParameters = ['name', 'description', 'authorId', 'bookPDF', 'BookCategories'];
 
 const permitParams = require('./helpers').permitParams;
 const respnondWithError = require('./helpers').respnondWithError;
 const respnondWithSuccess = require('./helpers').respnondWithSuccess;
 const respnondWithSuccessAndError = require('./helpers').respnondWithSuccessAndError;
+
 
 const getBooks = (req, res) => {
   let jsonToReturn = {
@@ -50,31 +80,154 @@ const getBook = (req, res) => {
   });
 };
 
+const loadAndSendBook = (req, res) => {
+  let query = {where: { id: req.params.id }};
+  if(req.params.authorId){
+    query.where.authorId = req.params.authorId;
+  }
+  Book.findOne(query)
+  .then(book => {
+    if(book) {
+      return Promise.resolve(book);
+    }else{
+      return Promise.reject('book not found');
+    }
+  })
+  .then(book => {
+    res.statusCode = 200;
+    res.sendFile(`${uploadPath}/${book.id}.pdf`);
+  })
+  .catch(err => {
+    res.statusCode = 400;
+    let error = err || err.message
+    res.send(error);
+  })
+}
+
+
+
+// const createBook = (err, req, res, next) => {
 const createBook = (req, res) => {
-  let jsonToReturn = {
-    book: null,
-    err: null
-  };
-  if(permitParams(req.body, permittedParameters)){
+  bookUploader.single('bookPDF')(req, res, err => {
+    let jsonToReturn = {
+      book: null,
+      err: []
+    };
     let data = req.body;
+    let tempBook = null;
+    let tempFile = req.file || null;
     if(req.params.authorId){
       data.authorId = req.params.authorId;
     }
-    Book.create(data, {
-      include: [
-        {
-          model: BookCategory
+    (new Promise( (resolve, reject) => {
+      if(err){
+        if( err.message === 'Unexpected field'){
+          err.message = "use 'bookPDF' as file field name";
         }
-      ]
-    }).then(book => {
-      respnondWithSuccess(res, jsonToReturn, 201, book.toJSON(), 'book');
-    }).catch((err)=>{
-      respnondWithError(res, jsonToReturn, 400, err.message);
+        reject(err);
+      }else{
+        resolve();
+      }
+    }))
+    .then(() => {
+      return Book.create(data)
+    })
+    .then(book => {
+      tempBook = book;
+      data.BookCategories = data.BookCategories.map(x => { return {bookId: book.id, categoryId: x.categoryId} });
+      return BookCategory.bulkCreate(data.BookCategories)
+    })
+    .then(bookCategories => {
+      return new Promise((resolve, reject) => {
+        if(req.file){
+          fs.rename(`${req.file.path}`, `${uploadPath}/${tempBook.id}.pdf`,(err) => {
+            if(err){
+              reject("could't rename the uploaded file to match books's id");
+            }else{
+              resolve();
+            }
+          });
+        }else{
+          reject("could't upload the file");
+        }
+      });
+    })
+    .then(() => {
+      jsonToReturn.book = tempBook.toJSON();
+      return Promise.resolve(); 
+    })
+    .catch(err => {
+      let errorToPush = err.message || err.Error || err;
+      jsonToReturn.err.push(errorToPush);
+    })
+    .finally(() => {
+      console.log(jsonToReturn.err);
+      (new Promise((resolve, reject) => {
+        if(jsonToReturn.err.length > 0){
+          jsonToReturn.book = null;
+          res.statusCode = 400;
+          
+          if(tempFile){
+            fs.unlink(tempFile.path, err => {
+              if (err) jsonToReturn.err.push(err.message);
+              if(tempBook){
+                tempBook.destroy();
+              }
+              resolve();
+            });
+          }else{
+            resolve();
+          }
+        }else{
+          res.statusCode = 201;
+          resolve();
+        }
+      })).finally(() => {
+        res.json(jsonToReturn);
+      });
     });
-  }else{
-    respnondWithError(res, jsonToReturn, 400, 'Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
-  }
+  });
 };
+
+// const updateBook1 = (req, res) => {
+//   bookUploader.single('bookPDF')(req, res, err => {
+//     let jsonToReturn = {
+//       book: null,
+//       err: []
+//     };
+//     let data = req.body;
+//     let tempBook = null;
+//     let tempFile = req.file || null;
+//     if(req.params.authorId){
+//       data.authorId = req.params.authorId;
+//     }
+//     let query = {where: { id: req.params.id }};
+//     if(req.params.authorId){
+//       query.where.authorId = req.params.authorId;
+//     }
+//     (new Promise( (resolve, reject) => {
+//       if(err){
+//         if( err.message === 'Unexpected field'){
+//           err.message = "use 'bookPDF' as file field name";
+//         }
+//         reject(err);
+//       }else{
+//         resolve();
+//       }
+//     }))
+//     .then(() => {
+//       return Book.findOne(query)
+//     })
+//     .then(book => {
+//       if(book){
+//         tempBook = book;
+//         return Promise.resolve();
+//       }else{
+//         return Promise.reject('book not found');
+//       }
+//     })
+//   });
+// };
 
 const updateBook = (req, res) => {
   let jsonToReturn = {
@@ -82,14 +235,6 @@ const updateBook = (req, res) => {
     err: []
   };
   if(permitParams(req.body, permittedParameters)){
-    let data = req.body;
-    if(req.params.authorId){
-      data.authorId = req.params.authorId;
-    }
-    let query = {where: { id: req.params.id }};
-    if(req.params.authorId){
-      query.where.authorId = req.params.authorId;
-    }
     Book.findOne(query).then(book => {
       if(book){
         book.update(data).then(() => {
@@ -139,6 +284,7 @@ const deleteBook = (req, res) => {
 
 router.get('/', getBooks);
 router.get('/:id', getBook);
+router.get('/:id/view', loadAndSendBook);
 router.post('/', createBook);
 router.patch('/:id', updateBook);
 router.put('/:id', updateBook);
@@ -153,3 +299,7 @@ module.exports = {
   updateBook: updateBook,
   deleteBook: deleteBook
 };
+
+
+
+

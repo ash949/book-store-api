@@ -2,7 +2,7 @@ let express = require('express');
 let jwt = require('jsonwebtoken');
 let User = require('../models').User;
 let bcrypt = require('bcrypt');
-let authSecrets = require('../../config/auth');
+let secret = require('../../config/auth').secret;
 let router = express.Router();
 const permitParams = require('./helpers').permitParams;
 
@@ -14,7 +14,7 @@ const loginUser = (req, res) => {
           user = user.get({ plain: true });
           delete user.password;
           res.json({
-            token: jwt.sign(user, authSecrets.secret),
+            token: jwt.sign(user, secret),
             user: user
           });
         } else {

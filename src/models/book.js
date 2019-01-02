@@ -3,14 +3,17 @@ const schema = require('../../db/schemas/book');
 const tableName = schema.tableName;
 const ratingSchema = require('../../db/schemas/rating');
 const downloadSchema = require('../../db/schemas/download');
-const bookCategorySchema = require('../../db/schemas/bookCategory');
-const db = require('./index');
 
-
-
+const baseURL = require('../../config/app')[process.env.NODE_ENV].baseURL;
 
 module.exports = (sequelize, DataTypes) => {
   const attributes = schema.getAttributes(DataTypes);
+  attributes.url = {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return baseURL + '/books/' + this.getDataValue('id') + '/view'
+    }
+  };
   const Book = sequelize.define('Book', attributes, {
     tableName: tableName
   });
