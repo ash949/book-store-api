@@ -19,14 +19,7 @@ var storage = multer.diskStorage({
 
 const bookUploader = multer(
   {
-    storage: storage,
-    fileFilter: (req, file, cb) => {
-      if(permitParams(req.body, permittedParameters)){
-        cb(null, true);
-      }else{
-        cb(new Error('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters))
-      }
-    }
+    storage: storage
   }
 );
 
@@ -119,7 +112,13 @@ const createBook = (req, res) => {
     if(req.params.authorId){
       data.authorId = req.params.authorId;
     }
+    
     (new Promise( (resolve, reject) => {
+      if(permitParams(req.body, permittedParameters)){
+        resolve();
+      }else{
+        reject('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
+      }
       if(err){
         if( err.message === 'Unexpected field'){
           err.message = "use 'bookPDF' as file field name";
@@ -137,7 +136,7 @@ const createBook = (req, res) => {
       data.BookCategories = data.BookCategories.map(x => { return {bookId: book.id, categoryId: x.categoryId} });
       return BookCategory.bulkCreate(data.BookCategories)
     })
-    .then(bookCategories => {
+    .then(() => {
       return new Promise((resolve, reject) => {
         if(req.file){
           fs.rename(`${req.file.path}`, `${uploadPath}/${tempBook.id}.pdf`,(err) => {
@@ -148,10 +147,11 @@ const createBook = (req, res) => {
             }
           });
         }else{
-          reject("could't upload the file");
+          reject("could't upload the book file");
         }
       });
     })
+    
     .then(() => {
       jsonToReturn.book = tempBook.toJSON();
       return Promise.resolve(); 
@@ -166,13 +166,12 @@ const createBook = (req, res) => {
         if(jsonToReturn.err.length > 0){
           jsonToReturn.book = null;
           res.statusCode = 400;
-          
+          if(tempBook){
+            tempBook.destroy();
+          }
           if(tempFile){
             fs.unlink(tempFile.path, err => {
-              if (err) jsonToReturn.err.push(err.message);
-              if(tempBook){
-                tempBook.destroy();
-              }
+              if (err) jsonToReturn.err.push(err.message);   
               resolve();
             });
           }else{
