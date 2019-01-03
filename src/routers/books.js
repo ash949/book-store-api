@@ -19,7 +19,14 @@ var storage = multer.diskStorage({
 
 const bookUploader = multer(
   {
-    storage: storage
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+      if( file.mimetype ==='application/pdf'){
+        cb(null, true);
+      }else{
+        cb(new Error('File must be a PDF'));
+      }
+    }
   }
 );
 
@@ -114,19 +121,16 @@ const createBook = (req, res) => {
     }
     
     (new Promise( (resolve, reject) => {
-      if(permitParams(req.body, permittedParameters)){
-        resolve();
-      }else{
+      if(!permitParams(req.body, permittedParameters)){
         reject('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
       }
       if(err){
         if( err.message === 'Unexpected field'){
           err.message = "use 'bookPDF' as file field name";
         }
-        reject(err);
-      }else{
-        resolve();
+        reject(err.message || err.Error || 'could not upload the file');
       }
+      resolve();
     }))
     .then(() => {
       return Book.create(data)
@@ -151,7 +155,6 @@ const createBook = (req, res) => {
         }
       });
     })
-    
     .then(() => {
       jsonToReturn.book = tempBook.toJSON();
       return Promise.resolve(); 
@@ -161,7 +164,6 @@ const createBook = (req, res) => {
       jsonToReturn.err.push(errorToPush);
     })
     .finally(() => {
-      console.log(jsonToReturn.err);
       (new Promise((resolve, reject) => {
         if(jsonToReturn.err.length > 0){
           jsonToReturn.book = null;
