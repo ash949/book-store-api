@@ -4,16 +4,13 @@ let router = express.Router();
 let User = require('../models').User;
 let Admin= require('../models').Admin;
 let Author = require('../models').Author;
-let booksRouter = require('./books');
+let booksRouter = require('./books').router;
 
 const permittedParameters = ['username', 'email', 'password', 'isAuthor', 'isAdmin'];
 
 const permitParams = require('./helpers').permitParams;
+const authenticate = require('./helpers').authenticate;
 const isAdmin = require('./helpers').isAdmin;
-const checkPrivilege = require('./helpers').checkPrivilege;
-const respnondWithSuccess = require('./helpers').respnondWithSuccess;
-const respnondWithSuccessAndError = require('./helpers').respnondWithSuccessAndError;
-const isSameToLoggedInUser = require('./helpers').isSameToLoggedInUser;
 
 const getUsers = (req, res) => {
   let jsonToReturn = {
@@ -21,16 +18,7 @@ const getUsers = (req, res) => {
     err: []
   };
 
-  (new Promise((resolve, reject) => {
-    if(isAdmin(req)){
-      resolve();
-    }else{
-      reject('Not Authorized');
-    }
-  }))
-  .then(() => {
-    return User.findAll()
-  })
+  User.findAll()
   .then(users => {
     jsonToReturn.user = users;
   })
@@ -56,16 +44,9 @@ const getUser = (req, res) => {
   User.findByPk(req.params.id)
   .then(user => {
     if(user){
-      return Promise.resolve(user);
-    }else{
-      return Promise.reject('user not found');
-    }
-  })
-  .then(user =>{
-    if(isAdmin(req) || isSameToLoggedInUser(req, user)){
       jsonToReturn.user = user.toJSON();
     }else{
-      return Promise.reject('Not Authorized');
+      return Promise.reject('user not found');
     }
   })
   .catch(err => {
@@ -104,16 +85,11 @@ const createUser = (req, res) => {
     return Promise.resolve();
   })
   .then(() => {
-    if(isAdmin(req)){
-      if(req.body.hasOwnProperty('isAuthor') && req.body.isAuthor === true){
-        return Author.create({id: tempUser.id});
-      }else{
-        return Promise.resolve(true);
-      }
+    if(req.body.hasOwnProperty('isAuthor') && req.body.isAuthor === true){
+      return Author.create({id: tempUser.id});
     }else{
-      return Promise.reject('Not Authorized to setAuthor');
+      return Promise.resolve(true);
     }
-    
   })
   .then(author => {
     if(typeof author === 'boolean'){
@@ -124,15 +100,11 @@ const createUser = (req, res) => {
     }
   })
   .then(() => {
-    if(isAdmin(req)){
-      if(req.body.hasOwnProperty('isAdmin') && req.body.isAdmin === true){
-        return Admin.create({id: tempUser.id});
-      }else{
-        return Promise.resolve(true);
-      }
+    if(req.body.hasOwnProperty('isAdmin') && req.body.isAdmin === true){
+      return Admin.create({id: tempUser.id});
     }else{
-      return Promise.reject('Not Authorized to setAdmin');
-    }   
+      return Promise.resolve(true);
+    } 
   })
   .then(admin => {
     if(typeof admin === 'boolean'){
@@ -188,59 +160,25 @@ const updateUser = (req, res) => {
     }
   })
   .then(() => {
-    if(isAdmin(req) || isSameToLoggedInUser(req, tempUser)){
-      return tempUser.update(req.body);
-    }else{
-      return Promise.reject('Not Authorized');
-    }
+    return tempUser.update(req.body);
   })
   .then(() => {
     jsonToReturn.user = tempUser.toJSON();
-    return Promise.resolve();
-  })
-  .then(() => {
-    if(isAdmin(req)){
-      if(req.body.hasOwnProperty('isAuthor')){
-        if(jsonToReturn.user.Author === null && req.body.isAuthor === true){
-          return Author.create({id: tempUser.id});
-        }else if(jsonToReturn.user.Author !== null && req.body.isAuthor === false){
-          return Author.destroy({where: {id: tempUser.id}});
-        }else{
-          return Promise.resolve(false);
-        }
+    if(req.body.hasOwnProperty('isAuthor')){
+      if(jsonToReturn.user.Author === null && req.body.isAuthor === true){
+        return Author.create({id: tempUser.id});
+      }else if(jsonToReturn.user.Author !== null && req.body.isAuthor === false){
+        return Author.destroy({where: {id: tempUser.id}});
       }else{
-        return Promise.resolve(true);
+        return Promise.resolve(false);
       }
     }else{
-      return Promise.reject('Not Authorized to change isAuthor');
+      return Promise.resolve(true);
     }
   })
   .then(author => {
     if(author === false){
-      jsonToReturn.err.push('isAuthor contains invalid data or the change required is already applied');
-    }
-    return Promise.resolve();
-  })
-  .then(() => {
-    if(isAdmin(req)){
-      if(req.body.hasOwnProperty('isAdmin')){
-        if(jsonToReturn.user.Admin === null && req.body.isAdmin === true){
-          return Admin.create({id: tempUser.id});
-        }else if(jsonToReturn.user.Admin !== null && req.body.isAdmin === false){
-          return Admin.destroy({where: {id: tempUser.id}});
-        }else{
-          return Promise.resolve(false);
-        }
-      }else{
-        return Promise.resolve(true);
-      }
-    }else{
-      return Promise.reject('Not Authorized to change isAdmin');
-    }
-  })
-  .then(admin => {
-    if(admin === false){
-      jsonToReturn.err.push('isAdmin contains invalid data or the change required is already applied');
+      jsonToReturn.err.push('isAuthor property contains invalid data or the change required is already applied');
     }
     return Promise.resolve();
   })
@@ -270,16 +208,8 @@ const deleteUser = (req, res) => {
     user: null,
     err: []
   };
-  (new Promise((resolve, reject)=> {
-    if(isAdmin(req)){
-      resolve();
-    }else{
-      reject('Not Authorized');
-    }
-  }))
-  .then(() => {
-    return User.findByPk(req.params.id)
-  })
+
+  User.findByPk(req.params.id)
   .then(user => {
     if(user){
       userToReturn = user.toJSON();
@@ -303,13 +233,36 @@ const deleteUser = (req, res) => {
   });
 };
 
-router.get('/', getUsers);
-router.get('/:id', getUser);
-router.post('/', createUser);
-router.patch('/:id', updateUser);
-router.put('/:id', updateUser);
-router.delete('/:id', deleteUser);
+const getRouter = (passport) => {
+  router.get('/', authenticate([['isAdmin']], passport), getUsers);
+  router.get('/:id', authenticate([
+    ['isAdmin'],
+    ['sameUser']
+  ],passport), getUser);
+  router.post('/', authenticate([
+    ['isAdmin']
+  ], passport), createUser);
+  router.patch('/:id', authenticate([
+    ['isAdmin', 'notTargetingAdmin', 'notChangingIsAdmin'],
+    ['sameUser', 'notChangingIsAdmin', 'notChangingIsAuthor']
+  ], passport), updateUser);
+  router.put('/:id', authenticate([
+    ['isAdmin', 'notTargetingAdmin', 'notChangingIsAdmin'],
+    ['sameUser', 'notChangingIsAdmin', 'notChangingIsAuthor']
+  ], passport), updateUser);
+  router.delete('/:id', authenticate([
+    ['isAdmin', 'notTargetingAdmin']
+  ], passport), deleteUser);
 
-router.use('/:authorId/books', booksRouter.router);
+  router.use('/:authorId/books', booksRouter(passport));
+  return router;
+};
 
-module.exports = router;
+module.exports = {
+  router: getRouter,
+  getUsers: getUsers,
+  getUser: getUser,
+  createUser: createUser,
+  updateUser: updateUser,
+  deleteUser: deleteUser
+};

@@ -19,9 +19,10 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   });
-
+  
   User.setScopes = (models) => {
     User.addScope('defaultScope', {
+      attributes: { exclude: ["password"] },  
       include: [
         {
           model: models.Author
@@ -31,37 +32,37 @@ module.exports = (sequelize, DataTypes) => {
         }
       ]
     }, { override: true });
+    User.addScope('withPassword',
+      {
+        include: [
+          {
+            model: models.Author
+          },
+          {
+            model: models.Admin
+          }
+        ]
+      } 
+    );
   };
   
   User.addInstanceMethods = (models) => {
     User.prototype.isAuthor = function(){
       let user = this;
-      return new Promise((resolve, reject) => {
-        models.Author.findOne({where: {id: user.id}}).then(author => {
-          if(author){
-            resolve(true);
-          }else{
-            resolve(false);
-          }
-        }).catch(err => {
-          reject(err.message);
-        })
-      });
+      if(user.Author && user.Author.id === user.id){
+        return true;
+      }else{
+        return false;
+      }
     };
 
     User.prototype.isAdmin = function(){
       let user = this;
-      return new Promise((resolve, reject) => {
-        models.Admin.findOne({where: {id: user.id}}).then(admin => {
-          if(admin){
-            resolve(true);
-          }else{
-            resolve(false);
-          }
-        }).catch(err => {
-          reject(err.message);
-        })
-      });
+      if(user.Admin && user.Admin.id === user.id){
+        return true;
+      }else{
+        return false;
+      }
     };
 
     User.prototype.hashPassword = function(){

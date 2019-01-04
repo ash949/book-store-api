@@ -1,3 +1,4 @@
+const OriginalnodeEnv = process.env.NODE_ENV;
 process.env.NODE_ENV = 'test';
 const Category = require('../../src/models').Category;
 const testGetAllEndPoint = require('./helpers').testGetAllEndPoint;
@@ -145,3 +146,5 @@ testPutEndPoint(Category, { name: 'comedy' },
 ]);
 
 testDeleteEndPoint(Category);
+
+process.env.NODE_ENV = OriginalnodeEnv;

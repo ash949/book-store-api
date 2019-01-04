@@ -2,10 +2,11 @@ let express = require('express');
 const bodyParser = require('body-parser');
 let passport = require('./middlewares/auth');
 let authRouter = require('./routers/auth');
-let usersRouter = require('./routers/users');
+let usersRouter = require('./routers/users').router;
 let categoriesRouter = require('./routers/categories').router;
 let booksRouter = require('./routers/books').router;
 let models = require('./models');
+const authenticate = require('./routers/helpers').authenticate
 let os = require('os');
 
 
@@ -17,17 +18,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded()); 
 app.use(passport.initialize());
 
-app.use('/auth', authRouter);
-app.use('/users', passport.authenticate('jwt', { session: false }), usersRouter);
-app.use('/categories', categoriesRouter);
-app.use('/books', booksRouter);
+app.use('/auth', authRouter(passport));
+app.use('/users', usersRouter(passport));
+app.use('/books', booksRouter(passport));
+app.use('/categories', categoriesRouter(passport));
+
 
 app.get('/', (req, res) => {
   res.send('hello');
-});
-
-app.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
-  res.send(req.user);
 });
 
 app.post('/', (req, res) => {

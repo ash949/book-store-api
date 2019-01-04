@@ -6,6 +6,7 @@ let Category = require('../models').Category;
 const permittedParameters = ['name'];
 
 const permitParams = require('./helpers').permitParams;
+const authenticate = require('./helpers').authenticate;
 
 const getCategories = (req, res) => {
   let jsonToReturn = {
@@ -124,16 +125,30 @@ const deleteCategory = (req, res) => {
   });
 };
 
-router.get('/', getCategories);
-router.get('/:id', getCategory);
-router.post('/', createCategory);
-router.patch('/:id', updateCategory);
-router.put('/:id', updateCategory);
-router.delete('/:id', deleteCategory);
+const getRouter = (passport) => {
+
+  // for test only, I will skip authentication and authorization
+  if(process.env.NODE_ENV !== 'test'){
+    router.use(authenticate([
+      ['isAdmin']
+    ], passport));
+  }
+
+  
+  router.get('/', getCategories);
+  router.get('/:id', getCategory);
+  router.post('/', createCategory);
+  router.patch('/:id', updateCategory);
+  router.put('/:id', updateCategory);
+  router.delete('/:id', deleteCategory);
+
+  return router;
+
+};
 
 
 module.exports = {
-  router: router,
+  router: getRouter,
   getCategories: getCategories,
   getCategory: getCategory,
   createCategory: createCategory,

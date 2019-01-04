@@ -39,46 +39,67 @@ const BookCategory = require('../models').BookCategory;
 const permittedParameters = ['name', 'description', 'authorId', 'bookPDF', 'BookCategories'];
 
 const permitParams = require('./helpers').permitParams;
-const respnondWithError = require('./helpers').respnondWithError;
-const respnondWithSuccess = require('./helpers').respnondWithSuccess;
-const respnondWithSuccessAndError = require('./helpers').respnondWithSuccessAndError;
-
+const authenticate = require('./helpers').authenticate;
 
 const getBooks = (req, res) => {
   let jsonToReturn = {
     book: null,
-    err: null
+    err: []
   };
   let query = {where: {}};
   if(req.params.authorId){
     query.where.authorId = req.params.authorId;
   }
-  Book.findAll(query).then(books => {
-    respnondWithSuccess(res, jsonToReturn, 200, books, 'book');
-  }).catch((err)=>{
-    respnondWithError(res, jsonToReturn, 400, err.message);
+  Book.findAll(query)
+  .then(books => {
+    jsonToReturn.book = books;
+  })
+  .catch(err => {
+    let errorToPush = err.message || err;
+    jsonToReturn.err.push(errorToPush);
+  })
+  .finally(() => {
+    if(jsonToReturn.err.length > 0){
+      res.statusCode = 400;
+    }else{
+      res.statusCode = 200;
+    }
+    res.json(jsonToReturn);
   });
 };
 
 const getBook = (req, res) => {
   let jsonToReturn = {
     book: null,
-    err: null
+    err: []
   };
   let query = {where: { id: req.params.id }};
   if(req.params.authorId){
     query.where.authorId = req.params.authorId;
   }
-  Book.findOne(query).then(book => {
+  Book.findOne(query)
+  .then(book => {
     if(book){
-      respnondWithSuccess(res, jsonToReturn, 200, book.toJSON(), 'book');
+      jsonToReturn.book = book.toJSON();
+      return Promise.resolve();
     }else{
-      respnondWithError(res, jsonToReturn, 404, 'book not found');
+      return Promise.reject('book not found');
     }
-  }).catch((err)=>{
-    respnondWithError(res, jsonToReturn, 400, err.message);
+  })
+  .catch(err => {
+    let errorToPush = err.message || err;
+    jsonToReturn.err.push(errorToPush);
+  })
+  .finally(() => {
+    if(jsonToReturn.err.length > 0){
+      res.statusCode = 400;
+    }else{
+      res.statusCode = 200;
+    }
+    res.json(jsonToReturn);
   });
 };
+
 
 const loadAndSendBook = (req, res) => {
   let query = {where: { id: req.params.id }};
@@ -298,35 +319,78 @@ const deleteBook = (req, res) => {
   let bookToReturn = null;
   let jsonToReturn = {
     book: null,
-    err: null
+    err: []
   };
   let query = {where: { id: req.params.id }};
   if(req.params.authorId){
     query.where.authorId = req.params.authorId;
   }
-  Book.findOne(query).then(book => {
-    if(book){
+  Book.findOne(query)
+  .then(book => {
+    if(book){      
+      bookToReturn = book.toJSON();
+      jsonToReturn.book = bookToReturn;
       book.destroy();
-      respnondWithSuccess(res, jsonToReturn, 200, book.toJSON(), 'book');
     }else{
-      respnondWithError(res, jsonToReturn, 404, 'book not found');
+      return Promise.reject('book not found');
     }
-  }).catch((err)=>{
-    respnondWithError(res, jsonToReturn, 400, err.message);
+  })
+  .then(() => {
+    return new Promise((resolve, reject) => {
+      fs.unlink(`${uploadPath}/${bookToReturn.id}.pdf`, err => {
+        if (err) reject("Could not delete the book file, maybe there is no file named after this book's id");
+        resolve();
+      });
+    });
+  })
+  .catch(err => {
+    jsonToReturn.book = null;
+    let errorToPush = err.message || err.Error || err;
+    jsonToReturn.err.push(errorToPush);
+  })
+  .finally(() => {
+    if(jsonToReturn.err.length > 0){
+      res.statusCode = 400;
+    }else{
+      res.statusCode = 200;
+    }
+    res.json(jsonToReturn);
   });
 };
 
-router.get('/', getBooks);
-router.get('/:id', getBook);
-router.get('/:id/view', loadAndSendBook);
-router.post('/', createBook);
-router.patch('/:id', updateBook);
-router.put('/:id', updateBook);
-router.delete('/:id', deleteBook);
+const getRouter = (passport) => {
+  router.get('/', authenticate([
+    ['isAdmin', 'notTargetingAdmin']
+  ], passport), getBooks);
+  router.get('/:id', authenticate([
+    []
+  ], passport), getBook);
+  router.get('/:id/view', authenticate([
+    []
+  ], passport), loadAndSendBook);
+  router.post('/', authenticate([
+    ['isAdmin'],
+    ['isAuthor', 'sameUser']
+  ], passport), createBook);
+  router.patch('/:id', authenticate([
+    ['isAdmin'],
+    ['isAuthor', 'sameUser']
+  ], passport), updateBook);
+  router.put('/:id', authenticate([
+    ['isAdmin'],
+    ['isAuthor', 'sameUser']
+  ], passport), updateBook);
+  router.delete('/:id', authenticate([
+    ['isAdmin'],
+    ['isAuthor', 'sameUser']
+  ], passport), deleteBook);
+  
+  return router;
+}
 
 
 module.exports = {
-  router: router,
+  router: getRouter,
   getBooks: getBooks,
   getBook: getBook,
   createBook: createBook,

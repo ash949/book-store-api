@@ -1,4 +1,3 @@
-process.env.NODE_ENV = 'test';
 const factory = require('../../factories');
 const chai = require('chai');
 const chaiHTTP = require('chai-http');

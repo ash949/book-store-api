@@ -3,8 +3,6 @@ const FactoryGirl = require('factory-girl');
 const fs = require('fs');
 const path = require('path');
 
-process.env.NODE_ENV = 'test';
-
 const factory = FactoryGirl.factory;
 const adapter = new FactoryGirl.SequelizeAdapter();
 

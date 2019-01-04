@@ -7,12 +7,11 @@ let router = express.Router();
 const permitParams = require('./helpers').permitParams;
 
 const loginUser = (req, res) => {
-  User.findOne({ where: { email: req.body.email } }).then((user) => {
+  User.scope('withPassword').findOne({ where: { email: req.body.email } }).then((user) => {
     if (user) {
       bcrypt.compare(req.body.password, user.password).then((isMatched) => {
         if (isMatched) {
-          user = user.get({ plain: true });
-          delete user.password;
+          user = user.toJSON();
           res.json({
             token: jwt.sign(user, secret),
             user: user
@@ -61,7 +60,11 @@ const signupUser = (req, res) => {
   });    
 };
 
-router.post('/login', loginUser);
-router.post('/signup', signupUser);
+const getRouter = (passport) => {
+  router.post('/login', loginUser);
+  router.post('/signup', signupUser);
 
-module.exports = router;
+  return router;
+}
+
+module.exports = getRouter;

@@ -44,5 +44,14 @@ module.exports = {
     }else{
       return false;
     }
+  },
+  authenticate: (gaurds, passport) => {
+    return (req, res, next) => {
+      delete req.auth;
+      req.auth = {};
+      delete req.auth.gaurdPaths;
+      req.auth.gaurdPaths = gaurds;
+      passport.authenticate('auth', { session: false })(req, res, next);
+    }
   }
 };

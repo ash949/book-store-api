@@ -6,5 +6,11 @@ const self = module.exports = {
   bookUploadPath: rootPath + '/uploads/books',
   development: {
     baseURL: 'localhost:3000'
+  },
+  test: {
+    baseURL: 'localhost:3000'
+  },
+  production: {
+    baseURL: ''
   }
 };
