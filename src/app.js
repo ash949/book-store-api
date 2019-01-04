@@ -6,7 +6,6 @@ let usersRouter = require('./routers/users').router;
 let categoriesRouter = require('./routers/categories').router;
 let booksRouter = require('./routers/books').router;
 let models = require('./models');
-const authenticate = require('./routers/helpers').authenticate
 let os = require('os');
 
 
@@ -23,19 +22,8 @@ app.use('/users', usersRouter(passport));
 app.use('/books', booksRouter(passport));
 app.use('/categories', categoriesRouter(passport));
 
-
-app.get('/', (req, res) => {
-  res.send('hello');
-});
-
-app.post('/', (req, res) => {
-  res.send(req.body);
-});
-
 models.sequelize.sync().then(function () {
-  app.listen(port, () => {
-    console.log('\n'.repeat(40));
-  });
+  app.listen(port, () => {});
 });
 
 module.exports = app;
