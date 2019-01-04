@@ -14,24 +14,29 @@ const isAdmin = require('./helpers').isAdmin;
 
 const getUsers = (req, res) => {
   let jsonToReturn = {
-    user: null,
+    users: [],
     err: []
   };
-
-  User.findAll()
-  .then(users => {
-    jsonToReturn.user = users;
-  })
-  .catch(err => {
-    let errorToPush = err.message || err;
-    jsonToReturn.err.push(errorToPush);
-  })
-  .finally(() => {
-    if(jsonToReturn.err.length > 0){
+  (new Promise((resolve, reject) => {
+    User.findAll()
+    .then(users => {
+      if(users && (users.length > 0)){
+        res.statusCode = 200;
+        jsonToReturn.users = users;
+        resolve();
+      }else{
+        res.statusCode = 404;
+        jsonToReturn.err.push('no users found');
+        resolve();
+      }
+    })
+    .catch(err => {
       res.statusCode = 400;
-    }else{
-      res.statusCode = 200;
-    }
+      jsonToReturn.err.push(err.message);
+      resolve();
+    });
+  }))
+  .finally(() => {
     res.json(jsonToReturn);
   });
 };
@@ -41,24 +46,27 @@ const getUser = (req, res) => {
     user: null,
     err: []
   };
-  User.findByPk(req.params.id)
-  .then(user => {
-    if(user){
-      jsonToReturn.user = user.toJSON();
-    }else{
-      return Promise.reject('user not found');
-    }
-  })
-  .catch(err => {
-    let errorToPush = err.message || err;
-    jsonToReturn.err.push(errorToPush);
-  })
-  .finally(() => {
-    if(jsonToReturn.err.length > 0){
+  let query = {where: { id: req.params.id }};
+  (new Promise((resolve, reject) => {
+    User.findOne(query)
+    .then(user => {
+      if(user){
+        res.statusCode = 200;
+        jsonToReturn.user = user.toJSON();
+        resolve();
+      }else{
+        res.statusCode = 404;
+        jsonToReturn.err.push('user not found');
+        resolve();
+      }
+    })
+    .catch(err => {
       res.statusCode = 400;
-    }else{
-      res.statusCode = 200;
-    }
+      jsonToReturn.err.push(err.message);
+      resolve();
+    })
+  }))
+  .finally(() => {
     res.json(jsonToReturn);
   });
 };
@@ -71,65 +79,113 @@ const createUser = (req, res) => {
   let tempUser = null;
   (new Promise((resolve, reject) => {
     if(permitParams(req.body, permittedParameters)){
-      resolve();
+      resolve(true);
     }else{
-      reject('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
+      res.statusCode = 400;
+      jsonToReturn.err.push('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
+      resolve(false);
     }
   }))
-  .then(() => {
-    return User.create(req.body);
-  })
-  .then(user => {
-    tempUser = user;
-    jsonToReturn.user = user.toJSON();
-    return Promise.resolve();
-  })
-  .then(() => {
-    if(req.body.hasOwnProperty('isAuthor') && req.body.isAuthor === true){
-      return Author.create({id: tempUser.id});
+  .then(result => {
+    if(result){
+      return (new Promise((resolve, reject) => {
+        User.create(req.body)
+        .then(user => {
+          tempUser = user;
+          jsonToReturn.user = user;
+          resolve(true);
+        })
+        .catch(err => {
+          res.statusCode = 400;
+          jsonToReturn.err.push(err.message);
+          resolve(false);
+        });
+      }))
     }else{
-      return Promise.resolve(true);
+      return Promise.resolve(false);
     }
   })
-  .then(author => {
-    if(typeof author === 'boolean'){
-      jsonToReturn.err.push('isAuthor contain invalid data or the user is already an author');
-      return Promise.resolve(true);
+  .then(result => {
+    if(result){
+      if(req.body.hasOwnProperty('isAuthor') && req.body.isAuthor === true){
+        return (new Promise((resolve, reject) => {
+          Author.create({id: tempUser.id})
+          .then(author => {
+            resolve(true);
+          })
+          .catch(err => {
+            res.statusCode = 400;
+            jsonToReturn.err.push(err.message);
+            resolve(false);
+          });
+        }));
+      }else{
+        return Promise.resolve(true);
+      }
     }else{
-      return tempUser.setAuthor(author);
+      return Promise.resolve(false);
     }
   })
-  .then(() => {
-    if(req.body.hasOwnProperty('isAdmin') && req.body.isAdmin === true){
-      return Admin.create({id: tempUser.id});
+  .then(result => {
+    if(result){
+      if(req.body.hasOwnProperty('isAdmin') && req.body.isAdmin === true){
+        return (new Promise((resolve, reject) => {
+          Admin.create({id: tempUser.id})
+          .then(admin => {
+            resolve(true);
+          })
+          .catch(err => {
+            res.statusCode = 400;
+            jsonToReturn.err.push(err.message);
+            resolve(false);
+          });
+        }));
+      }else{
+        return Promise.resolve(true);
+      }
     }else{
-      return Promise.resolve(true);
-    } 
-  })
-  .then(admin => {
-    if(typeof admin === 'boolean'){
-      jsonToReturn.err.push('isAdmin contain invalid data or the user is already an admin');
-      return Promise.resolve(true);
-    }else{
-      return tempUser.setAdmin(admin);
+      return Promise.resolve(false);
     }
   })
-  .then(() => {
-    return User.findByPk(jsonToReturn.user.id);
+  .then(result => {
+    if(result){
+      return (new Promise((resolve, reject) => {
+        User.findByPk(jsonToReturn.user.id)
+        .then(user => {
+          if(user){
+            res.statusCode = 201;
+            jsonToReturn.user = user;
+            resolve(true);
+          }else{
+            res.statusCode = 400;
+            jsonToReturn.err.push('something went really wrong while creating this user, could not get the created user');
+            resolve(false);
+          }
+        })
+        .catch(err => {
+          res.statusCode = 400;
+          jsonToReturn.err.push('something went really wrong while creating this user, could not get the created user');
+          resolve(false);
+        });
+      }));
+    }else{
+      return Promise.resolve(false);
+    }
   })
-  .then(user => {
-    jsonToReturn.user = user.toJSON();
-  })
-  .catch(err => {
-    let errorToPush = err.message || err;
-    jsonToReturn.err.push(errorToPush);
+  .then(result => {
+    if(!result && jsonToReturn.user){
+      User.destroy({where: {id: jsonToReturn.user.id}})
+      .then(() => {
+        resolve();
+      })
+      .catch(err => {
+        res.statusCode = 400;
+        jsonToReturn.err.push(err.message);
+        resolve();
+      });
+    }
   })
   .finally(() => {
-    if(jsonToReturn.err.length > 0){
-      res.statusCode = 400;
-    }else{
-      res.statusCode = 201;
-    }
     res.json(jsonToReturn);
   });      
 };
@@ -141,63 +197,120 @@ const updateUser = (req, res) => {
   };
   let tempUser = null;
   let i = 0;
+  let query = {where: { id: req.params.id }};
   (new Promise((resolve, reject) => {
     if(permitParams(req.body, permittedParameters)){
-      resolve();
+      resolve(true);
     }else{
-      reject('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
+      res.statusCode = 400;
+      jsonToReturn.err.push('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
+      resolve(false);
     }
   }))
-  .then(() => {
-    return User.findByPk(req.params.id);
-  })
-  .then(user => {
-    if(user){
-      tempUser = user;
-      return Promise.resolve();
+  .then(result => {
+    if(result){
+      return (new Promise((resolve, reject) => {
+        User.findByPk(query)
+        .then(user => {
+          if(user){
+            tempUser = user;
+            resolve(true);
+          }else{
+            res.statusCode = 404;
+            jsonToReturn.err.push('user not found');
+            resolve(false);
+          }
+        })
+        .catch(err => {
+          res.statusCode = 400;
+          jsonToReturn.err.push(err.message);
+          resolve(false);
+        });
+      }));
     }else{
-      return Promise.reject('user not found');
+      return Promise.reject(false);
     }
   })
-  .then(() => {
-    return tempUser.update(req.body);
+  .then(result => {
+    if(result){
+      return (new Promise((resolve, reject) => {
+        tempUser.update(req.body)
+        .then(() => {
+          resolve(true);
+        })
+        .catch(err => {
+          res.statusCode = 400;
+          jsonToReturn.err.push(err.message);
+          resolve(false);
+        });
+      }));
+    }else{
+      return Promise.reject(false);
+    }
   })
-  .then(() => {
-    jsonToReturn.user = tempUser.toJSON();
-    if(req.body.hasOwnProperty('isAuthor')){
-      if(jsonToReturn.user.Author === null && req.body.isAuthor === true){
-        return Author.create({id: tempUser.id});
-      }else if(jsonToReturn.user.Author !== null && req.body.isAuthor === false){
-        return Author.destroy({where: {id: tempUser.id}});
+  .then(result => {
+    if(result){
+      if(req.body.hasOwnProperty('isAuthor')){
+        if(tempUser.Author === null && req.body.isAuthor === true){
+          return (new Promise((resolve, reject) => {
+            Author.create({id: tempUser.id})
+            .then(author => {
+              resolve(true);
+            })
+            .catch(err => {
+              res.statusCode = 400;
+              jsonToReturn.err.push(err.message);
+              resolve(false);
+            });
+          }));
+        }else if(jsonToReturn.user.Author !== null && req.body.isAuthor === false){
+          return (new Promise((resolve, reject) => {
+            Author.destroy({where: {id: tempUser.id}})
+            .then(() => {
+              resolve(true);
+            })
+            .catch(err => {
+              res.statusCode = 400;
+              jsonToReturn.err.push(err.message);
+              resolve(false);
+            });
+          }));
+        }else{
+          return Promise.resolve(true);
+        }
       }else{
-        return Promise.resolve(false);
+        return Promise.resolve(true);
       }
     }else{
-      return Promise.resolve(true);
+      return Promise.reject(false);
     }
   })
-  .then(author => {
-    if(author === false){
-      jsonToReturn.err.push('isAuthor property contains invalid data or the change required is already applied');
+  .then(result => {
+    if(result){
+      return (new Promise((resolve, reject) => {
+        User.findByPk(jsonToReturn.user.id)
+        .then(user => {
+          if(user){
+            res.statusCode = 200;
+            jsonToReturn.user = user.toJSON();
+          }else{
+            res.statusCode = 400;
+            jsonToReturn.user = null;
+            jsonToReturn.err.push('user not found, something went really wrong while updating this user');
+            resolve(false);
+          }
+        })
+        .catch(err => {
+          res.statusCode = 400;
+          jsonToReturn.err.push(err.message);
+          resolve(false);
+        });
+      }));
+    }else{
+      return Promise.reject(false);
     }
-    return Promise.resolve();
-  })
-  .then(() => {
-    return User.findByPk(jsonToReturn.user.id);
-  })
-  .then(user => {
-    jsonToReturn.user = user.toJSON();
-  })
-  .catch(err => {
-    let errorToPush = err.message || err;
-    jsonToReturn.err.push(errorToPush);
   })
   .finally(() => {
-    if(jsonToReturn.err.length > 0){
-      res.statusCode = 400;
-    }else{
-      res.statusCode = 200;
-    }
     res.json(jsonToReturn);
   });
 };
@@ -208,27 +321,29 @@ const deleteUser = (req, res) => {
     user: null,
     err: []
   };
-
-  User.findByPk(req.params.id)
-  .then(user => {
-    if(user){
-      userToReturn = user.toJSON();
-      user.destroy();
-      jsonToReturn.user = userToReturn;
-    }else{
-      return Promise.reject('user not found');
-    }
-  })
-  .catch(err => {
-    let errorToPush = err.message || err;
-    jsonToReturn.err.push(errorToPush);
-  })
-  .finally(() => {
-    if(jsonToReturn.err.length > 0){
+  let query = {where: { id: req.params.id }};
+  (new Promise((resolve, reject) => {
+    User.findOne(query)
+    .then(user => {
+      if(user){
+        res.statusCode = 200;
+        userToReturn = user.toJSON();
+        jsonToReturn.user = userToReturn;
+        user.destroy();
+        resolve();
+      }else{
+        res.statusCode = 404;
+        jsonToReturn.err.push('user not found');
+        resolve();
+      }
+    })
+    .catch(err => {
       res.statusCode = 400;
-    }else{
-      res.statusCode = 200;
-    }
+      jsonToReturn.err.push(err.message);
+      resolve();
+    });
+  }))
+  .finally(() => {
     res.json(jsonToReturn);
   });
 };

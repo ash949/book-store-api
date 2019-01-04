@@ -14,7 +14,7 @@ const port = process.env.PORT || 3000;
 let app = express();
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded()); 
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(passport.initialize());
 
 app.use('/auth', authRouter(passport));
@@ -23,7 +23,9 @@ app.use('/books', booksRouter(passport));
 app.use('/categories', categoriesRouter(passport));
 
 models.sequelize.sync().then(function () {
-  app.listen(port, () => {});
+  app.listen(port, () => {
+    console.log('Server has started successfully');
+  });
 });
 
 module.exports = app;

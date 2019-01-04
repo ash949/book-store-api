@@ -4,8 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../../config/database.js')[env];
+if(  !(['test', 'development', 'production'].includes(process.env.NODE_ENV)) ){
+  process.env.NODE_ENV = 'development';
+}
+const config = require(__dirname + '/../../config/database.js')[process.env.NODE_ENV];
 const db = {};
 
 let sequelize;
