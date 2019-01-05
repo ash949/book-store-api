@@ -6,7 +6,6 @@ const fs = require('fs');
 const multer = require('multer');
 const uploadPath = require('../../config/app').bookUploadPath;
 
-
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadPath)
@@ -114,12 +113,11 @@ const loadAndSendBook = (req, res) => {
       if(book) {
         res.statusCode = 200;
         bookURL = `${uploadPath}/${book.id}.pdf`;
-        resolve();
       }else{
         res.statusCode = 404;
         error = 'book not found';
-        resolve();
       }
+      resolve();
     })
     .catch(err => {
       res.statusCode = 400;
@@ -148,22 +146,22 @@ const createBook = (req, res) => {
     if(req.params.authorId){
       data.authorId = req.params.authorId;
     }
-    (new Promise( (resolve, reject) => {
+    Promise.resolve(true)
+    .then(result => {
       if(!permitParams(req.body, permittedParameters)){
+        
         res.statusCode = 400;
         jsonToReturn.err.push('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
-        resolve(false);
+        return Promise.resolve(false);
       }
-      if(err){
-        if( err.message === 'Unexpected field'){
-          err.message = "use 'bookPDF' as file field name";
-        }
+      if(err || !(req.file) ){
         res.statusCode = 400;
-        jsonToReturn.err.push(err.message || err.Error || 'could not upload the file');
-        resolve(false);
+        jsonToReturn.err.push('could not upload the file, make sure that (bookPDF) field contains a PDF file');
+        return Promise.resolve(false);
       }
-      resolve(true);
-    }))
+      console.log('1'.repeat(6));
+      return Promise.resolve(true);
+    })
     .then(result => {
       if(result){
         return (new Promise((resolve, reject) => {
@@ -179,43 +177,54 @@ const createBook = (req, res) => {
           });
         }));
       }else{
+        console.log('2'.repeat(6));
         return Promise.resolve(false);
       }
     })
     .then(result => {
       if(result){
-        if(data.BookCategories){
-          if(Array.isArray(data.BookCategories)){
-            return (new Promise((resolve, reject) => {
-              let bookCategories = [];
-              try {
-                bookCategories = data.BookCategories.map(x => {
+        if(data.BookCategories || (data.BookCategories === '') ){
+          if(Array.isArray(data.BookCategories) || (data.BookCategories === '') ){
+            try {
+              if(data.BookCategories === ''){
+                data.BookCategories = [];
+              }else{
+                data.BookCategories = data.BookCategories.map(x => {
                   x.bookId = tempBook.id;
                   return x;
                 });
-              } catch (error) {
-                res.statusCode = 400;
-                jsonToReturn.err.push('passed BookCategories array contains invalid data');
-                resolve(false);    
               }
-              BookCategory.bulkCreate(bookCategories)
-              .then(bookCategories => {
-                resolve(true);
-              })
-              .catch(err => {
-                res.statusCode = 400;
-                jsonToReturn.err.push(err.message);
-                resolve(false);    
-              });
-            }));
+              return Promise.resolve(true);
+            } catch (error) {
+              res.statusCode = 400;
+              jsonToReturn.err.push('passed BookCategories array contains invalid data');
+              return Promise.resolve(false);
+            }
           }else{
             res.statusCode = 400;
-            jsonToReturn.err.push('passed book categories is not an array');
+            jsonToReturn.err.push("passed book categories is neither an array nor empty string(to remove all book's categories)");
             return Promise.resolve(false);
           }
         }else{
           return Promise.resolve(true);
         }
+      }else{
+        return Promise.resolve(false);
+      }
+    })
+    .then(result => {
+      if(result){
+        return (new Promise((resolve, reject) => {
+          BookCategory.bulkCreate(data.BookCategories)
+          .then(bookCategories => {
+            resolve(true);
+          })
+          .catch(err => {
+            res.statusCode = 400;
+            jsonToReturn.err.push(err.message);
+            resolve(false);    
+          });
+        }))
       }else{
         return Promise.resolve(false);
       }
@@ -244,49 +253,66 @@ const createBook = (req, res) => {
       }
     })
     .then(result => {
-      if(!result){
-        if(req.file){
-          return (new Promise((resolve, reject) => {
-            fs.unlink(req.file.path, err => {
-              if (err) {
-                jsonToReturn.err.push("could't delete the file uploaded");
-                resolve();
-              }
-              if(tempBook){
-                tempBook.destroy()
-                .then(() => {
-                  resolve();
-                })
-                .catch(err => {
-                  res.statusCode = 400;
-                  jsonToReturn.err.push('something went really wrong while reverting book creation');
-                  resolve();    
-                });
-              }
-            });
-          }));
-        }
-      }else{
+      if(result){
         return (new Promise((resolve, reject) => {
           Book.findByPk(tempBook.id)
           .then(book => {
             if(book){
               res.statusCode = 201;
               jsonToReturn.book = book.toJSON();
-              resolve();
+              resolve(true);
             }else{
               res.statusCode = 400;
               jsonToReturn.book = null;
               jsonToReturn.err.push('book not found, something went wrong while getting the created book');
-              resolve();
+              resolve(false);
             }
           })
           .catch(err => {
             res.statusCode = 400;
             jsonToReturn.err.push(err.message);
-            resolve();
+            resolve(false);
           });
         }));
+      }else{
+        return Promise.resolve(false);
+      }
+    })
+    .then(result => {
+      if(!result){
+        jsonToReturn.book = null;
+        if(req.file){
+          return (new Promise((resolve, reject) => {
+            fs.unlink(req.file.path, err => {
+              if (err) {
+                jsonToReturn.err.push("couldn't delete the file uploaded while reverting book creation");
+              }
+              resolve(false);
+            });
+          }));
+        }else{
+          return Promise.resolve(false);
+        }
+      }else{
+        return Promise.resolve(true);
+      }
+    })
+    .then(result => {
+      if(!result){
+        jsonToReturn.book = null;
+        if(tempBook){
+          return (new Promise((resolve, reject) => {
+            tempBook.destroy()
+            .then(() => {
+              resolve();
+            })
+            .catch(err => {
+              res.statusCode = 400;
+              jsonToReturn.err.push('something went really wrong while reverting book creation');
+              resolve();    
+            });
+          }));
+        }
       }
     })
     .finally(() => {
@@ -310,22 +336,20 @@ const updateBook = (req, res) => {
       query.where.authorId = req.params.authorId;
     }
     
-    (new Promise( (resolve, reject) => {
+    Promise.resolve(true)
+    .then(result => {
       if(!permitParams(req.body, permittedParameters)){
         res.statusCode = 400;
         jsonToReturn.err.push('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
-        resolve(false);
+        return Promise.resolve(false);
       }
       if(err){
-        if( err.message === 'Unexpected field'){
-          err.message = "use 'bookPDF' as file field name";
-        }
         res.statusCode = 400;
-        jsonToReturn.err.push(err.message || err.Error || 'could not upload the file');
-        resolve(false);
+        jsonToReturn.err.push('could not upload the file, make sure that (bookPDF) field contains a PDF file');
+        return Promise.resolve(false);
       }
-      resolve(true);
-    }))
+      return Promise.resolve(true);
+    })
     .then(result => {
       if(result){
         return (new Promise((resolve, reject) => {
@@ -352,61 +376,34 @@ const updateBook = (req, res) => {
     })
     .then(result => {
       if(result){
-        if(req.file){
-          return (new Promise((resolve, reject) => {
-            fs.unlink(`${uploadPath}/${tempBook.id}.pdf`, err => {
-              if (err){
-                statusCode = 400;
-                jsonToReturn.err.push("could not delete the old file");
-                resolve(false);
+        if(data.BookCategories || (data.BookCategories === '') ){
+          if(Array.isArray(data.BookCategories) || (data.BookCategories === '') ){
+            try {
+              if(data.BookCategories === ''){
+                data.BookCategories = [];
               }else{
-                resolve(true);
-              }
-            });
-          }));
-        }else{
-          return Promise.resolve(true);
-        }
-      }else{
-        return Promise.resolve(false);
-      }
-    })
-    .then(result => {
-      if(result){
-        return (new Promise((resolve, reject) => {
-          fs.rename(`${req.file.path}`, `${uploadPath}/${tempBook.id}.pdf`,(err) => {
-            if(err){
-              res.statusCode = 400;
-              jsonToReturn.err.push("could't rename the uploaded file to match books's id");
-              resolve(false);
-            }else{
-              resolve(true);
-            }
-          });
-        }));
-      }else{
-        return Promise.resolve(false);
-      }
-    })
-    .then(result => {
-      if(result){
-        if(data.BookCategories){
-          if(Array.isArray(data.BookCategories)){
-            return (new Promise((resolve, reject) => {
-              let bookCategories = [];
-              try {
-                bookCategories = data.BookCategories.map(x => {
+                data.BookCategories = data.BookCategories.map(x => {
                   x.bookId = tempBook.id;
                   return x;
                 });
-              } catch (error) {
-                res.statusCode = 400;
-                jsonToReturn.err.push('passed BookCategories array contains invalid data');
-                resolve(false);    
               }
-              BookCategory.bulkCreate(bookCategories)
-              .then(bookCategories => {
-                resolve(true);
+            } catch (error) {
+              res.statusCode = 400;
+              jsonToReturn.err.push('passed BookCategories array contains invalid data');
+              return Promise.resolve(false);    
+            }
+            return (new Promise((resolve, reject) => {
+              BookCategory.destroy({where: {bookId: tempBook.id}})
+              .then(() => {
+                BookCategory.bulkCreate(data.BookCategories)
+                .then(bookCategories => {
+                  resolve(true);
+                })
+                .catch(err => {
+                  res.statusCode = 400;
+                  jsonToReturn.err.push(err.message);
+                  resolve(false);    
+                });
               })
               .catch(err => {
                 res.statusCode = 400;
@@ -416,7 +413,7 @@ const updateBook = (req, res) => {
             }));
           }else{
             res.statusCode = 400;
-            jsonToReturn.err.push('passed book categories is not an array');
+            jsonToReturn.err.push("passed book categories is neither an array nor empty string(to remove all book's categories)");
             return Promise.resolve(false);
           }
         }else{
@@ -445,24 +442,78 @@ const updateBook = (req, res) => {
     })
     .then(result => {
       if(result){
+        if(req.file){
+          return (new Promise((resolve, reject) => {
+            fs.unlink(`${uploadPath}/${tempBook.id}.pdf`, err => {
+              if (err){
+                res.statusCode = 400;
+                jsonToReturn.err.push("could not delete the old file");
+              }
+              resolve(true);
+            });
+          }));
+        }else{
+          return Promise.resolve(true);
+        }
+      }else{
+        return Promise.resolve(false);
+      }
+    })
+    .then(result => {
+      if(result){
+        if(req.file){
+          return (new Promise((resolve, reject) => {
+            fs.rename(`${req.file.path}`, `${uploadPath}/${tempBook.id}.pdf`,(err) => {
+              if(err){
+                res.statusCode = 400;
+                jsonToReturn.err.push("could't rename the uploaded file to match books's id");
+                resolve(false);
+              }else{
+                resolve(true);
+              }
+            });
+          }));
+        }else{
+          return Promise.resolve(true);
+        }
+      }else{
+        return Promise.resolve(false);
+      }
+    })
+    .then(result => {
+      if(result){
         return (new Promise((resolve, reject) => {
           Book.findByPk(tempBook.id)
           .then(book => {
             if(book){
               res.statusCode = 200;
               jsonToReturn.book = book.toJSON();
-              resolve();
             }else{
               res.statusCode = 400;
               jsonToReturn.err.push('could not get the book that just got updated');
-              resolve();
             }
+            resolve();
           })
           .catch(err => {
             res.statusCode = 400;
             jsonToReturn.err.push(err.message);
             resolve();
           });
+        }));
+      }else{
+        jsonToReturn.book = null;
+        return (new Promise((resolve, reject) => {
+          if(req.file){
+            fs.unlink(`${req.file.path}`, err => {
+              if (err){
+                res.statusCode = 400;
+                jsonToReturn.err.push("couldn't delete the uploaded file while semi-reverting update process");
+              }
+              resolve();
+            });
+          }else{
+            resolve();
+          }
         }));
       }
     })
@@ -485,11 +536,11 @@ const deleteBook = (req, res) => {
   (new Promise((resolve, reject) => {
     Book.findOne(query)
     .then(book => {
-      if(book){      
-        bookToReturn = book.toJSON();
-        jsonToReturn.book = bookToReturn;
+      if(book){
         book.destroy()
         .then(() => {
+          bookToReturn = book.toJSON();
+          jsonToReturn.book = bookToReturn;
           resolve(true);
         })
         .catch(err => {
@@ -511,16 +562,15 @@ const deleteBook = (req, res) => {
   }))
   .then(result => {
     if(result){
-      return(new Promise((resolve, reject) => {
+      return (new Promise((resolve, reject) => {
         fs.unlink(`${uploadPath}/${bookToReturn.id}.pdf`, err => {
           if (err){
             res.statusCode = 400;
             jsonToReturn.err.push("Book recored is deleted but could not delete the book file, maybe there is no file named after this book's id");
-            resolve();
           }else{
             res.statusCode = 200;
-            resolve();
           }
+          resolve();
         });
       }));
     }

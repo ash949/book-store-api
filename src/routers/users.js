@@ -10,7 +10,6 @@ const permittedParameters = ['username', 'email', 'password', 'isAuthor', 'isAdm
 
 const permitParams = require('./helpers').permitParams;
 const authenticate = require('./helpers').authenticate;
-const isAdmin = require('./helpers').isAdmin;
 
 const getUsers = (req, res) => {
   let jsonToReturn = {
@@ -23,12 +22,11 @@ const getUsers = (req, res) => {
       if(users && (users.length > 0)){
         res.statusCode = 200;
         jsonToReturn.users = users;
-        resolve();
       }else{
         res.statusCode = 404;
         jsonToReturn.err.push('no users found');
-        resolve();
       }
+      resolve();
     })
     .catch(err => {
       res.statusCode = 400;
@@ -53,12 +51,11 @@ const getUser = (req, res) => {
       if(user){
         res.statusCode = 200;
         jsonToReturn.user = user.toJSON();
-        resolve();
       }else{
         res.statusCode = 404;
         jsonToReturn.err.push('user not found');
-        resolve();
       }
+      resolve();
     })
     .catch(err => {
       res.statusCode = 400;
@@ -77,22 +74,22 @@ const createUser = (req, res) => {
     err: []
   };
   let tempUser = null;
-  (new Promise((resolve, reject) => {
+  Promise.resolve(true)
+  .then(result => {
     if(permitParams(req.body, permittedParameters)){
-      resolve(true);
+      return Promise.resolve(true);
     }else{
       res.statusCode = 400;
       jsonToReturn.err.push('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
-      resolve(false);
+      return Promise.resolve(false);
     }
-  }))
+  })
   .then(result => {
     if(result){
       return (new Promise((resolve, reject) => {
         User.create(req.body)
         .then(user => {
           tempUser = user;
-          jsonToReturn.user = user;
           resolve(true);
         })
         .catch(err => {
@@ -150,11 +147,11 @@ const createUser = (req, res) => {
   .then(result => {
     if(result){
       return (new Promise((resolve, reject) => {
-        User.findByPk(jsonToReturn.user.id)
+        User.findByPk(tempUser.id)
         .then(user => {
           if(user){
             res.statusCode = 201;
-            jsonToReturn.user = user;
+            jsonToReturn.user = user.toJSON();
             resolve(true);
           }else{
             res.statusCode = 400;
@@ -173,16 +170,21 @@ const createUser = (req, res) => {
     }
   })
   .then(result => {
-    if(!result && jsonToReturn.user){
-      User.destroy({where: {id: jsonToReturn.user.id}})
-      .then(() => {
-        resolve();
-      })
-      .catch(err => {
-        res.statusCode = 400;
-        jsonToReturn.err.push(err.message);
-        resolve();
-      });
+    if(!result){
+      jsonToReturn.user = null;
+      if(tempUser){
+        return (new Promise((resolve, reject) => {
+          User.destroy({where: {id: tempUser.id}})
+          .then(() => {
+            resolve();
+          })
+          .catch(err => {
+            res.statusCode = 400;
+            jsonToReturn.err.push(err.message);
+            resolve();
+          });
+        }));
+      }
     }
   })
   .finally(() => {
@@ -196,21 +198,21 @@ const updateUser = (req, res) => {
     err: []
   };
   let tempUser = null;
-  let i = 0;
   let query = {where: { id: req.params.id }};
-  (new Promise((resolve, reject) => {
+  Promise.resolve(true)
+  .then(result => {
     if(permitParams(req.body, permittedParameters)){
-      resolve(true);
+      return Promise.resolve(true);
     }else{
       res.statusCode = 400;
       jsonToReturn.err.push('Your request contains unpermitted attributes. Permitted attributes for the requested route are: ' + permittedParameters);
-      resolve(false);
+      return Promise.resolve(false);
     }
-  }))
+  })
   .then(result => {
     if(result){
       return (new Promise((resolve, reject) => {
-        User.findByPk(query)
+        User.findOne(query)
         .then(user => {
           if(user){
             tempUser = user;
@@ -263,7 +265,7 @@ const updateUser = (req, res) => {
               resolve(false);
             });
           }));
-        }else if(jsonToReturn.user.Author !== null && req.body.isAuthor === false){
+        }else if(tempUser.Author !== null && req.body.isAuthor === false){
           return (new Promise((resolve, reject) => {
             Author.destroy({where: {id: tempUser.id}})
             .then(() => {
@@ -287,12 +289,50 @@ const updateUser = (req, res) => {
   })
   .then(result => {
     if(result){
+      if(req.body.hasOwnProperty('isAdmin')){
+        if(tempUser.Admin === null && req.body.isAdmin === true){
+          return (new Promise((resolve, reject) => {
+            Admin.create({id: tempUser.id})
+            .then(admin => {
+              resolve(true);
+            })
+            .catch(err => {
+              res.statusCode = 400;
+              jsonToReturn.err.push(err.message);
+              resolve(false);
+            });
+          }));
+        }else if(tempUser.Admin !== null && req.body.isAdmin === false){
+          return (new Promise((resolve, reject) => {
+            Admin.destroy({where: {id: tempUser.id}})
+            .then(() => {
+              resolve(true);
+            })
+            .catch(err => {
+              res.statusCode = 400;
+              jsonToReturn.err.push(err.message);
+              resolve(false);
+            });
+          }));
+        }else{
+          return Promise.resolve(true);
+        }
+      }else{
+        return Promise.resolve(true);
+      }
+    }else{
+      return Promise.reject(false);
+    }
+  })
+  .then(result => {
+    if(result){
       return (new Promise((resolve, reject) => {
-        User.findByPk(jsonToReturn.user.id)
+        User.findByPk(tempUser.id)
         .then(user => {
           if(user){
             res.statusCode = 200;
             jsonToReturn.user = user.toJSON();
+            resolve(true);
           }else{
             res.statusCode = 400;
             jsonToReturn.user = null;
@@ -302,11 +342,13 @@ const updateUser = (req, res) => {
         })
         .catch(err => {
           res.statusCode = 400;
+          jsonToReturn.user = null;
           jsonToReturn.err.push(err.message);
           resolve(false);
         });
       }));
     }else{
+      jsonToReturn.user = null;
       return Promise.reject(false);
     }
   })
@@ -326,11 +368,18 @@ const deleteUser = (req, res) => {
     User.findOne(query)
     .then(user => {
       if(user){
-        res.statusCode = 200;
-        userToReturn = user.toJSON();
-        jsonToReturn.user = userToReturn;
-        user.destroy();
-        resolve();
+        user.destroy()
+        .then(() => {
+          res.statusCode = 200;
+          userToReturn = user.toJSON();
+          jsonToReturn.user = userToReturn;
+          resolve();  
+        })
+        .catch(err => {
+          res.statusCode = 400;
+          jsonToReturn.err.push(err.message);
+          resolve();  
+        })
       }else{
         res.statusCode = 404;
         jsonToReturn.err.push('user not found');
@@ -358,11 +407,11 @@ const getRouter = (passport) => {
     ['isAdmin']
   ], passport), createUser);
   router.patch('/:id', authenticate([
-    ['isAdmin', 'notTargetingAdmin', 'notChangingIsAdmin'],
+    ['isAdmin', 'notTargetingAdmin'],
     ['sameUser', 'notChangingIsAdmin', 'notChangingIsAuthor']
   ], passport), updateUser);
   router.put('/:id', authenticate([
-    ['isAdmin', 'notTargetingAdmin', 'notChangingIsAdmin'],
+    ['isAdmin', 'notTargetingAdmin'],
     ['sameUser', 'notChangingIsAdmin', 'notChangingIsAuthor']
   ], passport), updateUser);
   router.delete('/:id', authenticate([

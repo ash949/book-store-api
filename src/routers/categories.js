@@ -107,23 +107,40 @@ const deleteCategory = (req, res) => {
     category: null,
     err: null
   };
-  Category.findByPk(req.params.id).then( (category)=>{
-    if(category){
-      categoryToReturn = category.toJSON();
-      category.destroy();
-      res.statusCode = 200;
-      jsonToReturn.category = categoryToReturn;
-    }else{
-      res.statusCode = 404;
-      jsonToReturn.err = 'category not found';
-    }
-    res.json(jsonToReturn);
-  }).catch((err)=>{
-    res.statusCode = 400;
-    jsonToReturn.err = err.message;
+  let query = {where: { id: req.params.id }};
+  (new Promise((resolve, reject) => {
+    Category.findOne(query)
+    .then(category => {
+      if(category){
+        category.destroy()
+        .then(() => {
+          res.statusCode = 200;
+          categoryToReturn = category.toJSON();
+          jsonToReturn.category = categoryToReturn;
+          resolve();  
+        })
+        .catch(err => {
+          res.statusCode = 400;
+          jsonToReturn.err = err.message;
+          resolve();  
+        })
+      }else{
+        res.statusCode = 404;
+        jsonToReturn.err = 'category not found';
+        resolve();
+      }
+    })
+    .catch(err => {
+      res.statusCode = 400;
+      jsonToReturn.err = err.message;
+      resolve();
+    });
+  }))
+  .finally(() => {
     res.json(jsonToReturn);
   });
 };
+
 
 const getRouter = (passport) => {
 

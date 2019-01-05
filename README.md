@@ -6,7 +6,7 @@
 - User can view books and view/modify their data
 - Authors are users and can create/update their books and upload PDFs
 - Admins are users and can create users, books and categories
-- Admins are the only people who can can modify roles for other users (availale roles: `user`, `author`, (`admin`: only when creating a user)  );
+- Admins are the only people who can can modify roles for other users (availale roles: `user`, `author`, `admin`);
 - Admins can`t remove/modify other admin accounts
 
 **Notes:**

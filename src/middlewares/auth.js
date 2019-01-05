@@ -28,9 +28,9 @@ const getUserIdFromURL = (url) => {
 const gaurds = {
   isUser: (payload, req) => {
     return result => {
-      console.log('isUser gaurd is checking');
       if(result){
         return new Promise((resolve, reject) => {
+          console.log('isUser gaurd is checking');
           User.scope('withPassword').findOne({where: {id: payload.id}})
           .then(user => {
             user = user.toJSON();
@@ -38,7 +38,7 @@ const gaurds = {
               console.log('isUser: passed');
               resolve(true);
             } else {
-              console.log('isUser: blocked==========================================');
+              console.log('isUser: blocked');
               resolve(false);
             }
           })
@@ -48,7 +48,7 @@ const gaurds = {
           });
         });
       }else{
-        console.log('isUser: blocked, from the previous gaurd');
+        console.log('isUser: skipped');
         return Promise.resolve(false);
       }
     }
@@ -67,7 +67,7 @@ const gaurds = {
           }
         });
       }else{
-        console.log('notChangingIsAuthor: blocked, from the previous gaurd');
+        console.log('notChangingIsAuthor: skipped');
         return Promise.resolve(false);
       }
     }
@@ -86,7 +86,7 @@ const gaurds = {
           }
         });
       }else{
-        console.log('notChangingIsAdmin: blocked, from the previous gaurd');
+        console.log('notChangingIsAdmin: skipped');
         return Promise.resolve(false);
       }
     }
@@ -105,7 +105,7 @@ const gaurds = {
           }
         });
       }else{
-        console.log('isAuthor: blocked, from the previous gaurd');
+        console.log('isAuthor: skipped');
         return Promise.resolve(false);
       }
     }
@@ -124,7 +124,7 @@ const gaurds = {
           }
         });
       }else{
-        console.log('isAdmin: blocked, from previous gaurd');
+        console.log('isAdmin: skipped');
         return Promise.resolve(false);
       }
     }
@@ -135,9 +135,12 @@ const gaurds = {
         return new Promise((resolve, reject) => {
           console.log('notTargetingAdmin gaurd is checking');
           const idToCheck = getUserIdFromURL(req.originalUrl);
+          console.log(idToCheck);
           if(idToCheck !== -1){
+            
             User.findByPk(idToCheck).then(urlUser => {
-              if(urlUser && urlUser.isAdmin && urlUser.id !== payload.id){
+              
+              if(urlUser && urlUser.Admin && urlUser.id !== payload.id){
                 console.log('notTargetingAdmin: blocked');
                 resolve(false);
               }else{
@@ -154,7 +157,7 @@ const gaurds = {
           }
         });
       }else{
-        console.log('notTargetingAdmin: blocked, from previous gaurd');
+        console.log('notTargetingAdmin: skipped');
         return Promise.resolve(false);
       }
     }
@@ -184,7 +187,7 @@ const gaurds = {
           }
         });
       }else{
-        console.log('sameUser: blocked, from previous gaurd');
+        console.log('sameUser: skipped');
         return Promise.resolve(false);
       }
     }
@@ -223,7 +226,9 @@ passport.use('auth', new JwtStrategy(options, (req, payload, done) => {
   }
   console.log('chaining: the final task' );
   gaurdsPromises.push(result => {
-    pass = result;
+    if(pass !== true){
+      pass = result;
+    }
   });
   
   gaurdsPromises.reduce((gaurdChain, task) => {
@@ -233,9 +238,11 @@ passport.use('auth', new JwtStrategy(options, (req, payload, done) => {
   .finally(() => {
     if(pass){
       console.log('There is a path that has been resolved');
+      console.log('===========================================================');
       return done(null, payload);
     }else{
       console.log('All paths are rejected');
+      console.log('===========================================================');
       return done(null, false);
     }
   });
