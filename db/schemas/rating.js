@@ -1,8 +1,8 @@
-const booksSchema = require('./book');
-const usersSchema = require('./user');
+const booksSchema = require("./book");
+const usersSchema = require("./user");
 
 module.exports = {
-  getAttributes: (Sequelize) => {
+  getAttributes: Sequelize => {
     return {
       id: {
         allowNull: false,
@@ -42,19 +42,19 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: {
           model: usersSchema.tableName,
-          key: 'id'
+          key: "id"
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL"
       },
       bookId: {
         type: Sequelize.INTEGER,
         references: {
           model: booksSchema.tableName,
-          key: 'id'
+          key: "id"
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL"
       },
       createdAt: {
         allowNull: false,
@@ -66,5 +66,5 @@ module.exports = {
       }
     };
   },
-  tableName: 'ratings'
+  tableName: "ratings"
 };

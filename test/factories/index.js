@@ -1,7 +1,6 @@
-
-const FactoryGirl = require('factory-girl');
-const fs = require('fs');
-const path = require('path');
+const FactoryGirl = require("factory-girl");
+const fs = require("fs");
+const path = require("path");
 
 const factory = FactoryGirl.factory;
 const adapter = new FactoryGirl.SequelizeAdapter();
@@ -9,21 +8,18 @@ const adapter = new FactoryGirl.SequelizeAdapter();
 factory.setAdapter(adapter);
 
 let factoriesFiles = fs.readdirSync(__dirname);
-for (let i = 0; i < factoriesFiles.length; i++){
-  if(factoriesFiles[i] === path.basename(__filename)){
+for (let i = 0; i < factoriesFiles.length; i++) {
+  if (factoriesFiles[i] === path.basename(__filename)) {
     continue;
-  }else{
+  } else {
     require(path.join(__dirname, factoriesFiles[i]))(factory);
-
-  } 
+  }
 }
 
-factory.cleanTable = (Model) => {
-  return Model.destroy({where: {}});
+factory.cleanTable = Model => {
+  return Model.destroy({ where: {} });
 };
 
 module.exports = factory;
 
-factory.checkAttributes = (object, Model) => {
-  
-}
+factory.checkAttributes = (object, Model) => {};

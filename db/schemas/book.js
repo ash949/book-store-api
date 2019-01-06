@@ -1,7 +1,7 @@
-const authorsSchema = require('./author');
+const authorsSchema = require("./author");
 
 module.exports = {
-  getAttributes: (Sequelize) => {
+  getAttributes: Sequelize => {
     return {
       id: {
         allowNull: false,
@@ -14,7 +14,7 @@ module.exports = {
         type: Sequelize.STRING,
         unique: {
           args: true,
-          msg: 'this book name is already registered'
+          msg: "this book name is already registered"
         },
         validate: {
           notEmpty: {
@@ -24,7 +24,7 @@ module.exports = {
           len: {
             args: [1, 250],
             msg: "book's name's maximum length is 250"
-          },
+          }
         }
       },
       description: {
@@ -45,10 +45,10 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: {
           model: authorsSchema.tableName,
-          key: 'id'
+          key: "id"
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL"
       },
       createdAt: {
         allowNull: false,
@@ -58,7 +58,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-    }
+    };
   },
-  tableName: 'books'
+  tableName: "books"
 };

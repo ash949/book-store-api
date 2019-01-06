@@ -1,18 +1,18 @@
-'use strict';
-const schema = require('../../db/schemas/author');
+"use strict";
+const schema = require("../../db/schemas/author");
 const tableName = schema.tableName;
 
 module.exports = (sequelize, DataTypes) => {
   let attributes = schema.getAttributes(DataTypes);
-  const Author = sequelize.define('Author', attributes, {
+  const Author = sequelize.define("Author", attributes, {
     tableName: tableName
   });
   Author.associate = function(models) {
     Author.belongsTo(models.User, {
-      foreignKey: 'id'
+      foreignKey: "id"
     });
     Author.hasMany(models.Book, {
-      foreignKey: 'authorId'
+      foreignKey: "authorId"
     });
   };
   return Author;

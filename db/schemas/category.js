@@ -1,5 +1,5 @@
 module.exports = {
-  getAttributes: (Sequelize) => {
+  getAttributes: Sequelize => {
     return {
       id: {
         allowNull: false,
@@ -11,7 +11,7 @@ module.exports = {
         allowNull: false,
         unique: {
           args: true,
-          msg: 'category name is already registered'
+          msg: "category name is already registered"
         },
         type: Sequelize.STRING,
         validate: {
@@ -33,7 +33,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-    }
+    };
   },
-  tableName: 'categories'
+  tableName: "categories"
 };

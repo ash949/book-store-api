@@ -1,7 +1,7 @@
-const usersSchema = require('./user');
+const usersSchema = require("./user");
 
 module.exports = {
-  getAttributes: (Sequelize) => {
+  getAttributes: Sequelize => {
     return {
       id: {
         allowNull: false,
@@ -9,10 +9,10 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: {
           model: usersSchema.tableName,
-          key: 'id'
+          key: "id"
         },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE"
       },
       createdAt: {
         allowNull: false,
@@ -22,7 +22,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-    }
+    };
   },
-  tableName: 'authors'
+  tableName: "authors"
 };

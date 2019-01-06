@@ -1,5 +1,5 @@
 module.exports = {
-  getAttributes: (Sequelize) => {
+  getAttributes: Sequelize => {
     return {
       id: {
         allowNull: false,
@@ -12,7 +12,7 @@ module.exports = {
         type: Sequelize.STRING,
         unique: {
           args: true,
-          msg: 'this username is already registered'
+          msg: "this username is already registered"
         },
         validate: {
           len: {
@@ -30,12 +30,12 @@ module.exports = {
         type: Sequelize.STRING,
         unique: {
           args: true,
-          msg: 'this Email is already registered'
+          msg: "this Email is already registered"
         },
         validate: {
           isEmail: {
             args: true,
-            msg: 'entered Email is not valid'
+            msg: "entered Email is not valid"
           }
         }
       },
@@ -70,7 +70,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-    }
+    };
   },
-  tableName: 'users'
+  tableName: "users"
 };

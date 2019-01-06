@@ -1,19 +1,19 @@
-'use strict';
-const schema = require('../../db/schemas/bookCategory');
+"use strict";
+const schema = require("../../db/schemas/bookCategory");
 const tableName = schema.tableName;
-const db = require('./index');
+const db = require("./index");
 
 module.exports = (sequelize, DataTypes) => {
   const attributes = schema.getAttributes(DataTypes);
-  const BookCategory = sequelize.define('BookCategory', attributes, {
+  const BookCategory = sequelize.define("BookCategory", attributes, {
     tableName: tableName
   });
-  BookCategory.associate = (models) => {
+  BookCategory.associate = models => {
     BookCategory.belongsTo(models.Category, {
-      foreignKey: 'categoryId'
+      foreignKey: "categoryId"
     });
     BookCategory.belongsTo(models.Book, {
-      foreignKey: 'bookId'
+      foreignKey: "bookId"
     });
   };
   return BookCategory;
