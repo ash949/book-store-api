@@ -31,15 +31,10 @@ const gaurds = {
       if (result) {
         return new Promise((resolve, reject) => {
           console.log("isUser gaurd is checking");
-          User.scope("withPassword")
-            .findOne({ where: { id: payload.id } })
+          User.findOne({ where: { id: payload.id } })
             .then(user => {
               user = user.toJSON();
-              if (
-                user &&
-                payload.email === user.email &&
-                payload.password === user.password
-              ) {
+              if (user && payload.email === user.email) {
                 console.log("isUser: passed");
                 resolve(true);
               } else {
