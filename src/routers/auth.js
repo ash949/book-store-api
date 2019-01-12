@@ -14,6 +14,7 @@ const loginUser = (req, res) => {
         bcrypt.compare(req.body.password, user.password).then(isMatched => {
           if (isMatched) {
             user = user.toJSON();
+            delete user.password;
             res.json({
               token: jwt.sign(user, secret),
               user: user
